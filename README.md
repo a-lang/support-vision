@@ -39,6 +39,11 @@ skills/
 
 Each subdirectory is an independent skill containing a `SKILL.md` file, compliant with the [Agent Skills specification](https://agentskills.io/specification).
 
+## 🤝 Sponsorship & Support
+
+This project is independently developed and maintained by **penfick**. 
+For open-source sponsorships, API grant verifications, or general inquiries, please contact: **xingf6066@gmail.com**
+
 ## Friends
 
  [LinuxDo](https://linux.do) 
