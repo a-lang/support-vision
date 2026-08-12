@@ -17,9 +17,9 @@
 
 ## 截圖
 
-![在終端機中執行 support-vision](images/usage-recognize.png)
+![在終端機中執行 support-vision](images/screenshot1.png)
 
-![辨識結果輸出](images/usage-result.png)
+![辨識結果輸出](images/screenshot2.png)
 
 ## 安裝
 

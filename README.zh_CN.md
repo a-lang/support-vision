@@ -17,9 +17,9 @@
 
 ## 截图
 
-![在终端中运行 support-vision](images/usage-recognize.png)
+![在终端中运行 support-vision](images/screenshot1.png)
 
-![识别结果输出](images/usage-result.png)
+![识别结果输出](images/screenshot2.png)
 
 ## 安装
 

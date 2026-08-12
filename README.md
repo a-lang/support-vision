@@ -17,9 +17,9 @@ When your main model can't "see" images, support-vision automatically calls a co
 
 ## Screenshots
 
-![Running support-vision in terminal](images/usage-recognize.png)
+![Running support-vision in terminal](images/screenshot1.png)
 
-![Recognition result](images/usage-result.png)
+![Recognition result](images/screenshot2.png)
 
 ## Installation
 
