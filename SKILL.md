@@ -119,3 +119,19 @@ The model marked ★ (first in `config list`) is the primary and is tried first.
 | `VISION_CONFIG_PATH` | Custom config file path |
 | `VISION_DEFAULT_MODEL` | Temporarily override the primary model (matched by name) |
 | `VISION_API_KEY` | Global API key fallback |
+
+## Proxy configuration
+
+In `config.json`, the `proxy` section controls proxy behavior:
+
+```json
+"proxy": {
+  "disable": false,
+  "urls": []
+}
+```
+
+| Field | Meaning |
+| --- | --- |
+| `disable` | `true` disables proxying entirely — `HTTPS_PROXY`/`HTTP_PROXY` env vars and all auto-detection are ignored, and requests go direct. Omit or set to `false` to keep auto-detection (env vars > `urls` > Windows system proxy > common port probing). |
+| `urls` | Explicit proxy addresses, tried first. If unreachable, falls back to auto-detection (unless `disable` is `true`). |

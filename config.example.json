@@ -44,7 +44,8 @@
   "defaultPrompt": "Please describe this image in detail. If it shows a UI/web page, describe the layout, elements, colors, and any visible issues, errors, or misalignments. If it shows code output or terminal, describe the content and any error messages.",
 
   "proxy": {
-    "_comment": "代理設定。urls 為空時自動偵測代理（環境變數 > Windows 系統代理 > 探測常見連接埠）。填寫後優先使用，不通則回退到自動偵測。",
+    "_comment": "代理設定。disable 為 true 時完全停用代理（含環境變數，fetch 一律直連）；為 false/預設時依 環境變數 > urls > Windows 系統代理 > 探測常見連接埠 自動偵測。urls 非空時優先使用，不通則回退到自動偵測。",
+    "disable": false,
     "urls": []
   },
 

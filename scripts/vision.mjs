@@ -46,12 +46,14 @@ import { homedir } from "node:os";
 import { createConnection } from "node:net";
 
 // ---------------------------------------------------------------------------
-// 代理自動偵測：四層策略
-//   1. 環境變數 HTTPS_PROXY / HTTP_PROXY
-//   2. config.json 中使用者設定的代理
-//   3. Windows 系統代理設定（登錄檔）
-//   4. 探測常見代理連接埠
-// 偵測到後設定環境變數 + 用 --use-env-proxy 重啟
+// 代理設定：config.json 的 proxy.disable 可完全關閉代理功能（最高優先）
+//   disable: true  → 停用一切代理（含環境變數），fetch 一律直連
+//   disable: false → 依下列四層策略自動偵測代理：
+//     1. 環境變數 HTTPS_PROXY / HTTP_PROXY
+//     2. config.json 中使用者設定的代理
+//     3. Windows 系統代理設定（登錄檔）
+//     4. 探測常見代理連接埠
+// 偵測到後 patch 目前程序的 fetch，使其經由代理隧道
 // ---------------------------------------------------------------------------
 
 const COMMON_PROXY_PORTS = [
@@ -75,19 +77,22 @@ const COMMON_PROXY_PORTS = [
   { port: 9090, host: "127.0.0.1" },
 ];
 
-// 從 config.json 讀取使用者自訂的代理位址
-function loadConfigProxyUrls() {
+// 從 config.json 讀取代理設定（disable 旗標 + 使用者自訂代理位址）
+function loadConfigProxy() {
   try {
     const configDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
     for (const name of ["config.json", "config.example.json"]) {
       const p = join(configDir, name);
       if (existsSync(p)) {
         const cfg = JSON.parse(readFileSync(p, "utf-8"));
-        if (Array.isArray(cfg.proxy?.urls)) return cfg.proxy.urls;
+        return {
+          disable: cfg.proxy?.disable === true,
+          urls: Array.isArray(cfg.proxy?.urls) ? cfg.proxy.urls : [],
+        };
       }
     }
   } catch {}
-  return [];
+  return { disable: false, urls: [] };
 }
 
 // 探測單個連接埠是否有 HTTP 代理在監聽
@@ -128,13 +133,17 @@ function readWindowsSystemProxy() {
 
 // 自動偵測代理
 async function detectProxy() {
+  // 第 0 層：config.json proxy.disable — 完全停用代理（含環境變數）
+  const proxyCfg = loadConfigProxy();
+  if (proxyCfg.disable) return null;
+
   // 第 1 層：環境變數（使用者顯式設定，最高優先）
   const fromEnv = process.env.HTTPS_PROXY || process.env.HTTP_PROXY ||
                   process.env.https_proxy || process.env.http_proxy;
   if (fromEnv) return fromEnv;
 
   // 第 2 層：config.json 中使用者設定的代理（配了先試，不通再走後面的自動偵測）
-  const configUrls = loadConfigProxyUrls();
+  const configUrls = proxyCfg.urls;
   if (configUrls.length > 0) {
     for (const url of configUrls) {
       try {
