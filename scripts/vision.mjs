@@ -467,7 +467,7 @@ const PROVIDER_CATALOG = [
 const log  = (lv, m) => {
   const t = new Date().toISOString().slice(11, 19);
   const p = lv === "error" ? "✖" : lv === "warn" ? "⚠" : "ℹ";
-  process.stderr.write(`[${t}] ${p} [vision-support] ${m}\n`);
+  process.stderr.write(`[${t}] ${p} [support-vision] ${m}\n`);
 };
 const info  = (m) => log("info", m);
 const warn  = (m) => log("warn", m);
@@ -584,9 +584,9 @@ function findOtherInstalls() {
   const home = homedir();
   const current = SKILL_DIR;
   const candidates = [
-    join(home, ".agents", "skills", "vision-support"),
-    join(home, ".pi", "agent", "skills", "vision-support"),
-    join(home, ".claude", "skills", "vision-support"),
+    join(home, ".agents", "skills", "support-vision"),
+    join(home, ".pi", "agent", "skills", "support-vision"),
+    join(home, ".claude", "skills", "support-vision"),
   ];
   return candidates.filter((d) => existsSync(d) && resolve(d) !== resolve(current));
 }
@@ -1191,7 +1191,7 @@ async function recognize(cfg, imageSources, prompt) {
 
 function showHelp() {
   console.log(`
-vision-support — 非多模态模型的图片识别桥接
+support-vision — 非多模态模型的图片识别桥接
 
 铁律: 本工具配置的模型仅用于图片内容识别，绝不参与主逻辑推理。
 

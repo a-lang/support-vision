@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# vision-support 安装脚本（Mac / Linux / WSL）
+# support-vision 安装脚本（Mac / Linux / WSL）
 #
 # 用法:
 #   bash install.sh                    # 安装到默认目录
@@ -8,14 +8,13 @@
 #   bash install.sh --uninstall        # 卸载
 #
 # 一行安装:
-#   bash -c "$(curl -fsSL https://raw.githubusercontent.com/penfick/skills/main/vision-support/install.sh)"
+#   bash -c "$(curl -fsSL https://raw.githubusercontent.com/a-lang/support-vision/main/install.sh)"
 #
 
 set -e
 
-SKILL_NAME="vision-support"
-REPO_URL="https://github.com/penfick/skills.git"
-SKILL_SUBDIR="vision-support"
+SKILL_NAME="support-vision"
+REPO_URL="https://github.com/a-lang/support-vision.git"
 
 # 颜色
 RED='\033[0;31m'
@@ -32,7 +31,7 @@ err()   { echo -e "  ${RED}✖${NC} $1"; }
 banner() {
   echo ""
   echo "  ┌──────────────────────────────────────────────┐"
-  echo "  │           vision-support 安装                 │"
+  echo "  │           support-vision 安装               │"
   echo "  └──────────────────────────────────────────────┘"
   echo ""
 }
@@ -89,7 +88,7 @@ do_install() {
     fi
   fi
 
-  # 克隆整个 repo 到临时目录，只复制 skill 子目录
+  # 克隆整个 repo 到临时目录，复制技能文件
   local tmp_dir="$(mktemp -d)"
   info "正在下载..."
   git clone --depth 1 "$REPO_URL" "$tmp_dir" 2>/dev/null || {
@@ -98,15 +97,15 @@ do_install() {
     exit 1
   }
 
-  # 检查子目录存在
-  if [ ! -d "$tmp_dir/$SKILL_SUBDIR" ]; then
-    err "未找到 skill: $SKILL_SUBDIR"
+  # 检查技能文件存在
+  if [ ! -f "$tmp_dir/SKILL.md" ]; then
+    err "未找到技能文件: SKILL.md"
     rm -rf "$tmp_dir"
     exit 1
   fi
 
-  # 只复制 skill 子目录
-  cp -r "$tmp_dir/$SKILL_SUBDIR" "$dest"
+  # 复制技能文件
+  cp -r "$tmp_dir/scripts" "$tmp_dir/SKILL.md" "$tmp_dir/config.example.json" "$tmp_dir/references" "$dest"
   rm -rf "$tmp_dir"
 
   ok "已安装到: $dest"
@@ -144,7 +143,7 @@ do_uninstall() {
   done
 
   if [ $found -eq 0 ]; then
-    info "未检测到已安装的 vision-support"
+    info "未检测到已安装的 support-vision"
     exit 0
   fi
 

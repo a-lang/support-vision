@@ -1,4 +1,4 @@
-# Vision Support
+# Support Vision
 
 > **铁律：本技能配置的模型仅用于图片内容识别，绝不参与主逻辑推理。**
 
@@ -17,7 +17,7 @@
 
 ## 截图
 
-![在终端中运行 vision-support](images/usage-recognize.png)
+![在终端中运行 support-vision](images/usage-recognize.png)
 
 ![识别结果输出](images/usage-result.png)
 
@@ -26,37 +26,37 @@
 ### `npx skills`（推荐）
 
 ```bash
-npx skills add https://github.com/penfick/skills --skill vision-support -g -y
+npx skills add https://github.com/a-lang/support-vision -g -y
 ```
 
 ### npm
 
 ```bash
-npm install -g vision-support
+npm install -g support-vision
 ```
 
-安装后自动注册全局命令 `vision-support`，同时自动将 skill 文件复制到所有 agent 的 skills 目录。
+安装后自动注册全局命令 `support-vision`，同时自动将 skill 文件复制到所有 agent 的 skills 目录。
 
 ### Mac / Linux 一行命令
 
 ```bash
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/penfick/skills/main/vision-support/install.sh)"
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/a-lang/support-vision/main/install.sh)"
 ```
 
 ### Git Clone（手动安装）
 
 ```bash
-git clone https://github.com/penfick/skills.git ~/.agents/skills
+git clone https://github.com/a-lang/support-vision.git ~/.agents/skills/support-vision
 ```
 
 ### 卸载
 
 ```bash
 # npm
-npm uninstall -g vision-support
+npm uninstall -g support-vision
 
 # npx skills
-npx skills remove vision-support
+npx skills remove support-vision
 
 # 手动安装的
 node install.mjs --uninstall
@@ -69,24 +69,24 @@ node install.mjs --uninstall
 ### npm 用户
 
 ```bash
-vision-support init
+support-vision init
 ```
 
 ### git / npx skills 用户
 
 ```bash
 # Git Bash / Mac / Linux 终端
-node ~/.agents/skills/vision-support/scripts/vision.mjs init
+node ~/.agents/skills/support-vision/scripts/vision.mjs init
 
 # Windows PowerShell
-node "$HOME\.agents\skills\vision-support\scripts\vision.mjs" init
+node "$HOME\.agents\skills\support-vision\scripts\vision.mjs" init
 ```
 
 ### 在 Agent 中（Pi / Claude Code）
 
 ```
-/vision-support 帮我初始化配置
-/vision-support 帮我用 gemini-2.5-flash 配置主模型，API key 是 xxx
+/support-vision 帮我初始化配置
+/support-vision 帮我用 gemini-2.5-flash 配置主模型，API key 是 xxx
 ```
 
 ## 使用方法
@@ -94,19 +94,19 @@ node "$HOME\.agents\skills\vision-support\scripts\vision.mjs" init
 ### npm 用户
 
 ```bash
-vision-support ./image.png
-vision-support img1.png img2.png "对比两张图"
-vision-support https://example.com/img.png "描述图片"
+support-vision ./image.png
+support-vision img1.png img2.png "对比两张图"
+support-vision https://example.com/img.png "描述图片"
 ```
 
 ### git / npx skills 用户
 
 ```bash
 # Git Bash / Mac / Linux
-node ~/.agents/skills/vision-support/scripts/vision.mjs ./image.png
+node ~/.agents/skills/support-vision/scripts/vision.mjs ./image.png
 
 # Windows PowerShell
-node "$HOME\.agents\skills\vision-support\scripts\vision.mjs" ./image.png
+node "$HOME\.agents\skills\support-vision\scripts\vision.mjs" ./image.png
 ```
 
 ### 在 Agent 中
@@ -114,24 +114,24 @@ node "$HOME\.agents\skills\vision-support\scripts\vision.mjs" ./image.png
 发送图片后说 `看看这张图` / `分析这个截图`，自动触发。或手动：
 
 ```
-/vision-support 看看这张图
+/support-vision 看看这张图
 ```
 
 ## 配置管理
 
 ```bash
-# npm 用户直接用 vision-support 命令
-# git / npx skills 用户替换为 node ~/.agents/skills/vision-support/scripts/vision.mjs
+# npm 用户直接用 support-vision 命令
+# git / npx skills 用户替换为 node ~/.agents/skills/support-vision/scripts/vision.mjs
 
-vision-support init                    # 交互式初始化
-vision-support config add              # 添加 fallback 模型
-vision-support config edit [name]      # 编辑模型
-vision-support config list             # 列出模型
-vision-support config primary [name]   # 设置主模型
-vision-support config remove <name>    # 删除模型
-vision-support config set-key <n> <k>  # 设置密钥
-vision-support config set-url <n> <u>  # 设置 API 地址
-vision-support config test [name]      # 测试连通性
+support-vision init                    # 交互式初始化
+support-vision config add              # 添加 fallback 模型
+support-vision config edit [name]      # 编辑模型
+support-vision config list             # 列出模型
+support-vision config primary [name]   # 设置主模型
+support-vision config remove <name>    # 删除模型
+support-vision config set-key <n> <k>  # 设置密钥
+support-vision config set-url <n> <u>  # 设置 API 地址
+support-vision config test [name]      # 测试连通性
 ```
 
 ## 支持的平台
@@ -162,22 +162,19 @@ vision-support config test [name]      # 测试连通性
 ## 目录结构
 
 ```
-skills/
-├── README.md                    ← repo 说明
-├── LICENSE
-└── vision-support/
-    ├── SKILL.md                 ← skill 入口（Agent 自动读取）
-    ├── package.json
-    ├── bin/
-    │   ├── cli.mjs              ← npm 全局命令入口
-    │   └── postinstall.mjs      ← npm 安装后自动部署 skill 文件
-    ├── install.mjs              ← 跨平台安装脚本
-    ├── install.sh               ← Mac/Linux 一键安装
-    ├── config.example.json      ← 配置模板
-    ├── scripts/
-    │   └── vision.mjs           ← 核心脚本（零依赖）
-    └── references/
-        └── supported-models.md
+support-vision/
+├── SKILL.md                 ← skill 入口（Agent 自动读取）
+├── package.json
+├── bin/
+│   ├── cli.mjs              ← npm 全局命令入口
+│   └── postinstall.mjs      ← npm 安装后自动部署 skill 文件
+├── install.mjs              ← 跨平台安装脚本
+├── install.sh               ← Mac/Linux 一键安装
+├── config.example.json      ← 配置模板
+├── scripts/
+│   └── vision.mjs           ← 核心脚本（零依赖）
+└── references/
+    └── supported-models.md
 ```
 
 ## License
@@ -186,4 +183,4 @@ MIT
 
 ---
 
-[English Documentation](README.md)
+[English](README.md) · [繁體中文](README.zh_TW.md)

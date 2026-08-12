@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
 /**
- * vision-support CLI 入口（npm 全局安装后使用）
+ * support-vision CLI 入口（npm 全局安装后使用）
  *
  * 用法:
- *   vision-support <图片...> [prompt]       识图
- *   vision-support init                     初始化
- *   vision-support config <cmd> [args]      配置管理
+ *   support-vision <图片...> [prompt]       识图
+ *   support-vision init                     初始化
+ *   support-vision config <cmd> [args]      配置管理
  *
  * 本文件是 npm bin 入口，实际逻辑在 scripts/vision.mjs
  */
@@ -18,12 +18,12 @@ import { homedir } from "node:os";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PKG_DIR = resolve(__dirname, "..");
-const SKILL_NAME = "vision-support";
+const SKILL_NAME = "support-vision";
 
 /**
  * 找到 vision.mjs 的位置
  * 1) npm 安装：在同目录的 scripts/vision.mjs
- * 2) skill 安装：在 ~/.agents/skills/vision-support/scripts/vision.mjs
+ * 2) skill 安装：在 ~/.agents/skills/support-vision/scripts/vision.mjs
  */
 function findScript() {
   // 优先用包内的
@@ -40,7 +40,7 @@ function findScript() {
     if (existsSync(p)) return p;
   }
 
-  console.error(`✖ 找不到 vision.mjs，请重新安装: npm install -g vision-support`);
+  console.error(`✖ 找不到 vision.mjs，请重新安装: npm install -g support-vision`);
   process.exit(1);
 }
 

@@ -1,3 +1,4 @@
 node_modules/
 config.json
-*.tgz
+opencode.json
+VISION_PROXY_FINDINGS.md

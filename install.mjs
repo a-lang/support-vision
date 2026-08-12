@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * vision-support 安装脚本
+ * support-vision 安装脚本
  *
  * 用法:
  *   node install.mjs              # 交互式选择安装到哪个 agent（默认全局）
@@ -11,8 +11,8 @@
  *   node install.mjs --uninstall  # 卸载
  *
  * 一行安装:
- *   git clone https://github.com/penfick/skills.git /tmp/skills && node /tmp/skills/vision-support/install.mjs
- *   Mac/Linux: bash -c "$(curl -fsSL https://raw.githubusercontent.com/penfick/skills/main/vision-support/install.sh)"
+ *   git clone https://github.com/a-lang/support-vision.git /tmp/support-vision && node /tmp/support-vision/install.mjs
+ *   Mac/Linux: bash -c "$(curl -fsSL https://raw.githubusercontent.com/a-lang/support-vision/main/install.sh)"
  */
 
 import {
@@ -32,7 +32,7 @@ import { fileURLToPath } from "node:url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const SOURCE_DIR = resolve(__dirname);
-const SKILL_NAME = "vision-support";
+const SKILL_NAME = "support-vision";
 
 // ---------------------------------------------------------------------------
 // 已知 agent 安装位置
@@ -247,7 +247,7 @@ async function uninstall() {
   const installed = locations.filter((l) => existsSync(l.dir));
 
   if (installed.length === 0) {
-    process.stdout.write("  未检测到已安装的 vision-support\n");
+    process.stdout.write("  未检测到已安装的 support-vision\n");
     process.exit(0);
   }
 

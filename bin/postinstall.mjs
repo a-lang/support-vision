@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
 /**
- * vision-support npm postinstall 脚本
+ * support-vision npm postinstall 脚本
  *
- * npm install -g vision-support 后自动运行
+ * npm install -g support-vision 后自动运行
  * 安装到所有已知 agent 的 skills 目录（自动创建目录）
  */
 
@@ -14,7 +14,7 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PKG_DIR = resolve(__dirname, "..");
-const SKILL_NAME = "vision-support";
+const SKILL_NAME = "support-vision";
 
 const KNOWN_AGENTS = [
   { name: "通用 (Pi / Codex)", dir: join(homedir(), ".agents", "skills") },
@@ -52,9 +52,9 @@ function installSkill() {
 
   if (installed.length > 0) {
     process.stderr.write(
-      `\n  ✓ vision-support 已安装到 ${installed.length} 个位置:\n` +
+      `\n  ✓ support-vision 已安装到 ${installed.length} 个位置:\n` +
       installed.map((i) => `    - ${i}`).join("\n") +
-      `\n  运行 vision-support init 来配置模型\n\n`
+      `\n  运行 support-vision init 来配置模型\n\n`
     );
   }
 }

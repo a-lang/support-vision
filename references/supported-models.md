@@ -1,6 +1,6 @@
 # Supported Vision Models
 
-This reference lists vision-capable models tested with vision-support. The `provider` field in config determines the API format used.
+This reference lists vision-capable models tested with support-vision. The `provider` field in config determines the API format used.
 
 ## Provider Types
 
