@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 #
-# support-vision 安装脚本（Mac / Linux / WSL）
+# support-vision 安裝指令碼（Mac / Linux / WSL）
 #
 # 用法:
-#   bash install.sh                    # 安装到默认目录
-#   bash install.sh --dir /path/to/dir # 指定目录
-#   bash install.sh --uninstall        # 卸载
+#   bash install.sh                    # 安裝到預設目錄
+#   bash install.sh --dir /path/to/dir # 指定目錄
+#   bash install.sh --uninstall        # 解除安裝
 #
-# 一行安装:
+# 一行安裝:
 #   bash -c "$(curl -fsSL https://raw.githubusercontent.com/a-lang/support-vision/main/install.sh)"
 #
 
@@ -16,7 +16,7 @@ set -e
 SKILL_NAME="support-vision"
 REPO_URL="https://github.com/a-lang/support-vision.git"
 
-# 颜色
+# 顏色
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -31,28 +31,28 @@ err()   { echo -e "  ${RED}✖${NC} $1"; }
 banner() {
   echo ""
   echo "  ┌──────────────────────────────────────────────┐"
-  echo "  │           support-vision 安装               │"
+  echo "  │           support-vision 安裝               │"
   echo "  └──────────────────────────────────────────────┘"
   echo ""
 }
 
-# 检查 git
+# 檢查 git
 check_git() {
   if ! command -v git &>/dev/null; then
-    err "需要 git，请先安装: https://git-scm.com"
+    err "需要 git，請先安裝: https://git-scm.com"
     exit 1
   fi
 }
 
-# 检查 node
+# 檢查 node
 check_node() {
   if ! command -v node &>/dev/null; then
-    err "需要 Node.js 18+，请先安装: https://nodejs.org"
+    err "需要 Node.js 18+，請先安裝: https://nodejs.org"
     exit 1
   fi
 }
 
-# 检测 skill 目录
+# 偵測 skill 目錄
 detect_dir() {
   local home="$HOME"
   if [ -d "$home/.agents/skills" ]; then
@@ -64,7 +64,7 @@ detect_dir() {
   fi
 }
 
-# 安装
+# 安裝
 do_install() {
   banner
   check_git
@@ -75,10 +75,10 @@ do_install() {
 
   mkdir -p "$target_dir"
 
-  # 如果已存在，先删除
+  # 如果已存在，先刪除
   if [ -d "$dest" ]; then
     warn "已存在: $dest"
-    read -p "  是否覆盖？[Y/n] " confirm
+    read -p "  是否覆蓋？[Y/n] " confirm
     confirm="${confirm:-Y}"
     if [[ "$confirm" =~ ^[Yy]$ ]]; then
       rm -rf "$dest"
@@ -88,27 +88,27 @@ do_install() {
     fi
   fi
 
-  # 克隆整个 repo 到临时目录，复制技能文件
+  # 複製整個 repo 到暫存目錄，複製技能檔案
   local tmp_dir="$(mktemp -d)"
-  info "正在下载..."
+  info "正在下載..."
   git clone --depth 1 "$REPO_URL" "$tmp_dir" 2>/dev/null || {
-    err "克隆失败，请检查网络"
+    err "複製失敗，請檢查網路"
     rm -rf "$tmp_dir"
     exit 1
   }
 
-  # 检查技能文件存在
+  # 檢查技能檔案存在
   if [ ! -f "$tmp_dir/SKILL.md" ]; then
-    err "未找到技能文件: SKILL.md"
+    err "未找到技能檔案: SKILL.md"
     rm -rf "$tmp_dir"
     exit 1
   fi
 
-  # 复制技能文件
+  # 複製技能檔案
   cp -r "$tmp_dir/scripts" "$tmp_dir/SKILL.md" "$tmp_dir/config.example.json" "$tmp_dir/references" "$dest"
   rm -rf "$tmp_dir"
 
-  ok "已安装到: $dest"
+  ok "已安裝到: $dest"
   echo ""
   echo "  ━━━ 下一步 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   echo ""
@@ -117,8 +117,8 @@ do_install() {
   echo "     node $dest/scripts/vision.mjs init"
   echo ""
 
-  # 询问是否初始化
-  read -p "  现在初始化？[Y/n] " do_init
+  # 詢問是否初始化
+  read -p "  現在初始化？[Y/n] " do_init
   do_init="${do_init:-Y}"
   if [[ "$do_init" =~ ^[Yy]$ ]]; then
     echo ""
@@ -126,10 +126,10 @@ do_install() {
   fi
 
   echo ""
-  ok "安装完成！"
+  ok "安裝完成！"
 }
 
-# 卸载
+# 解除安裝
 do_uninstall() {
   banner
   local home="$HOME"
@@ -143,20 +143,20 @@ do_uninstall() {
   done
 
   if [ $found -eq 0 ]; then
-    info "未检测到已安装的 support-vision"
+    info "未偵測到已安裝的 support-vision"
     exit 0
   fi
 
-  read -p "  确认卸载？[y/N] " confirm
+  read -p "  確認解除安裝？[y/N] " confirm
   if [[ "$confirm" =~ ^[Yy]$ ]]; then
     for dir in "$home/.agents/skills" "$home/.pi/agent/skills"; do
       if [ -d "$dir/$SKILL_NAME" ]; then
         rm -rf "$dir/$SKILL_NAME"
-        ok "已删除: $dir/$SKILL_NAME"
+        ok "已刪除: $dir/$SKILL_NAME"
       fi
     done
     echo ""
-    ok "卸载完成"
+    ok "解除安裝完成"
   else
     info "已取消"
   fi

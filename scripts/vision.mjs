@@ -1,23 +1,23 @@
 #!/usr/bin/env node
 
 /**
- * vision.mjs — Vision Support Skill 核心脚本
+ * vision.mjs — Vision Support Skill 核心指令碼
  *
- * 铁律：本脚本配置的模型仅用于图片内容识别，绝不参与主逻辑推理。
+ * 鐵律：本指令碼設定的模型僅用於圖片內容辨識，絕不參與主邏輯推理。
  *
- * 零依赖：仅使用 Node.js 18+ 内置模块
+ * 零相依：僅使用 Node.js 18+ 內建模組
  *
  * 用法：
- *   node vision.mjs <图片...> [prompt]            识别一张或多张图片
- *   node vision.mjs init                          交互式初始化（选择主模型）
- *   node vision.mjs config add                    交互式添加 fallback 模型
- *   node vision.mjs config edit [name]            交互式编辑模型
- *   node vision.mjs config list                   列出已配置模型
- *   node vision.mjs config primary [name]         查看/设置主模型
- *   node vision.mjs config remove <name>          删除模型
- *   node vision.mjs config set-key <name> <key>   设置密钥
- *   node vision.mjs config set-url <name> <url>   设置 API 地址
- *   node vision.mjs config test [name]            测试连通性
+ *   node vision.mjs <圖片...> [prompt]            辨識一張或多張圖片
+ *   node vision.mjs init                          互動式初始化（選擇主模型）
+ *   node vision.mjs config add                    互動式新增 fallback 模型
+ *   node vision.mjs config edit [name]            互動式編輯模型
+ *   node vision.mjs config list                   列出已設定模型
+ *   node vision.mjs config primary [name]         查看/設定主模型
+ *   node vision.mjs config remove <name>          刪除模型
+ *   node vision.mjs config set-key <name> <key>   設定金鑰
+ *   node vision.mjs config set-url <name> <url>   設定 API 位址
+ *   node vision.mjs config test [name]            測試連通性
  *   node vision.mjs --help
  */
 
@@ -46,11 +46,12 @@ import { homedir } from "node:os";
 import { createConnection } from "node:net";
 
 // ---------------------------------------------------------------------------
-// 代理自动检测：三层策略
-//   1. 环境变量 HTTPS_PROXY / HTTP_PROXY
-//   2. Windows 系统代理设置（注册表）
-//   3. 探测常见代理端口
-// 检测到后设置环境变量 + 用 --use-env-proxy 重启
+// 代理自動偵測：四層策略
+//   1. 環境變數 HTTPS_PROXY / HTTP_PROXY
+//   2. config.json 中使用者設定的代理
+//   3. Windows 系統代理設定（登錄檔）
+//   4. 探測常見代理連接埠
+// 偵測到後設定環境變數 + 用 --use-env-proxy 重啟
 // ---------------------------------------------------------------------------
 
 const COMMON_PROXY_PORTS = [
@@ -68,13 +69,13 @@ const COMMON_PROXY_PORTS = [
   // Shadowsocks
   { port: 1087, host: "127.0.0.1" },
   { port: 1086, host: "127.0.0.1" },
-  // 其他常见
+  // 其他常見
   { port: 8080, host: "127.0.0.1" },
   { port: 8118, host: "127.0.0.1" },
   { port: 9090, host: "127.0.0.1" },
 ];
 
-// 从 config.json 读取用户自定义的代理地址
+// 從 config.json 讀取使用者自訂的代理位址
 function loadConfigProxyUrls() {
   try {
     const configDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -89,7 +90,7 @@ function loadConfigProxyUrls() {
   return [];
 }
 
-// 探测单个端口是否有 HTTP 代理在监听
+// 探測單個連接埠是否有 HTTP 代理在監聽
 function probePort(host, port, timeout = 300) {
   return new Promise((resolve) => {
     const sock = createConnection({ host, port }, () => {
@@ -102,7 +103,7 @@ function probePort(host, port, timeout = 300) {
   });
 }
 
-// 从 Windows 注册表读取系统代理
+// 從 Windows 登錄檔讀取系統代理
 function readWindowsSystemProxy() {
   try {
     const out = execSync(
@@ -112,7 +113,7 @@ function readWindowsSystemProxy() {
     const match = out.match(/ProxyServer\s+REG_SZ\s+(.+)/);
     if (match) {
       let proxy = match[1].trim();
-      // 处理 "127.0.0.1:7897" 或 "http=127.0.0.1:7897;https=127.0.0.1:7897"
+      // 處理 "127.0.0.1:7897" 或 "http=127.0.0.1:7897;https=127.0.0.1:7897"
       if (proxy.includes("=")) {
         const https = proxy.match(/https=([^;]+)/);
         const http = proxy.match(/http=([^;]+)/);
@@ -125,14 +126,14 @@ function readWindowsSystemProxy() {
   return null;
 }
 
-// 自动检测代理
+// 自動偵測代理
 async function detectProxy() {
-  // 第 1 层：环境变量（用户显式设置，最高优先）
+  // 第 1 層：環境變數（使用者顯式設定，最高優先）
   const fromEnv = process.env.HTTPS_PROXY || process.env.HTTP_PROXY ||
                   process.env.https_proxy || process.env.http_proxy;
   if (fromEnv) return fromEnv;
 
-  // 第 2 层：config.json 中用户配置的代理（配了先试，不通再走后面的自动检测）
+  // 第 2 層：config.json 中使用者設定的代理（配了先試，不通再走後面的自動偵測）
   const configUrls = loadConfigProxyUrls();
   if (configUrls.length > 0) {
     for (const url of configUrls) {
@@ -142,16 +143,16 @@ async function detectProxy() {
         if (ok) return url;
       } catch {}
     }
-    // 用户配的都不通，继续走下面的自动检测
+    // 使用者配的都不通，繼續走下面的自動偵測
   }
 
-  // 第 3 层：Windows 系统代理
+  // 第 3 層：Windows 系統代理
   if (process.platform === "win32") {
     const sysProxy = readWindowsSystemProxy();
     if (sysProxy) return sysProxy;
   }
 
-  // 第 4 层：自动探测常见代理端口
+  // 第 4 層：自動探測常見代理連接埠
   const results = await Promise.all(
     COMMON_PROXY_PORTS.map(async (c) => {
       const ok = await probePort(c.host, c.port);
@@ -162,15 +163,15 @@ async function detectProxy() {
   return results.find((r) => r) || null;
 }
 
-// 检测代理并 patch fetch，在当前进程内生效，不走 spawn 子进程
+// 偵測代理並 patch fetch，在目前程序中生效，不走 spawn 子程序
 const _detectedProxy = await detectProxy();
 if (_detectedProxy) {
   patchFetchProxy(_detectedProxy);
 }
 
 /**
- * 在进程内 patch globalThis.fetch，让所有 fetch 调用走 HTTP 代理隧道
- * 好处：不用 spawn 子进程，避免 Node 24 Windows 上的退出码 bug
+ * 在程序中 patch globalThis.fetch，讓所有 fetch 呼叫走 HTTP 代理隧道
+ * 好處：不用 spawn 子程序，避免 Node 24 Windows 上的退出碼 bug
  */
 function patchFetchProxy(proxyUrl) {
   const pUrl = new URL(proxyUrl);
@@ -180,12 +181,12 @@ function patchFetchProxy(proxyUrl) {
     const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
     const u = new URL(url);
 
-    // https 走代理，http 直连
+    // https 走代理，http 直連
     if (u.protocol !== "https:") {
       return origFetch(input, init);
     }
 
-    // 通过代理建立 CONNECT 隧道
+    // 透過代理建立 CONNECT 隧道
     const tunnel = await new Promise((resolve, reject) => {
       const connectReq = http.request({
         host: pUrl.hostname,
@@ -198,7 +199,7 @@ function patchFetchProxy(proxyUrl) {
           reject(new Error(`Proxy CONNECT failed: ${res.statusCode}`));
           return;
         }
-        // 用 CONNECT 得到的 socket 创建 TLS 连接
+        // 用 CONNECT 得到的 socket 建立 TLS 連線
         const agent = new https.Agent({
           socket,
           createConnection: () => tls.connect({
@@ -216,7 +217,7 @@ function patchFetchProxy(proxyUrl) {
       connectReq.end();
     });
 
-    // 通过隧道发 HTTPS 请求
+    // 透過隧道發 HTTPS 請求
     return new Promise((resolve, reject) => {
       const req = https.request({
         hostname: u.hostname,
@@ -276,11 +277,11 @@ const EXIT = {
 const MAX_IMAGE_SIZE = 20 * 1024 * 1024;
 
 // ---------------------------------------------------------------------------
-// Provider 目录 — 覆盖国内外主流平台
+// Provider 目錄 — 涵蓋國內外主流平台
 // ---------------------------------------------------------------------------
 
 const PROVIDER_CATALOG = [
-  // ── 国际平台 ──
+  // ── 國際平台 ──
   {
     id: "openai",
     name: "OpenAI",
@@ -362,10 +363,10 @@ const PROVIDER_CATALOG = [
     models: [],
     fetchModels: true,
   },
-  // ── 国内平台 ──
+  // ── 中國平台 ──
   {
     id: "dashscope",
-    name: "通义千问 (Qwen VL)",
+    name: "通義千問 (Qwen VL)",
     apiFormat: "openai",
     baseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1",
     keyEnv: "DASHSCOPE_API_KEY",
@@ -374,7 +375,7 @@ const PROVIDER_CATALOG = [
   },
   {
     id: "zhipuai",
-    name: "智谱 GLM (GLM-4V)",
+    name: "智譜 GLM (GLM-4V)",
     apiFormat: "openai",
     baseUrl: "https://open.bigmodel.cn/api/paas/v4",
     keyEnv: "GLM_API_KEY",
@@ -392,7 +393,7 @@ const PROVIDER_CATALOG = [
   },
   {
     id: "stepfun",
-    name: "阶跃星辰 (Step)",
+    name: "階躍星辰 (Step)",
     apiFormat: "openai",
     baseUrl: "https://api.stepfun.com/v1",
     keyEnv: "STEPFUN_API_KEY",
@@ -410,7 +411,7 @@ const PROVIDER_CATALOG = [
   },
   {
     id: "siliconflow",
-    name: "SiliconFlow (硅基流动)",
+    name: "SiliconFlow (矽基流動)",
     apiFormat: "openai",
     baseUrl: "https://api.siliconflow.cn/v1",
     keyEnv: "SILICONFLOW_API_KEY",
@@ -426,10 +427,10 @@ const PROVIDER_CATALOG = [
     models: [],
     fetchModels: true,
   },
-  // ── 本地部署 ──
+  // ── 本機部署 ──
   {
     id: "ollama",
-    name: "Ollama (本地)",
+    name: "Ollama (本機)",
     apiFormat: "openai",
     baseUrl: "http://localhost:11434/v1",
     keyEnv: "",
@@ -439,7 +440,7 @@ const PROVIDER_CATALOG = [
   },
   {
     id: "lmstudio",
-    name: "LM Studio (本地)",
+    name: "LM Studio (本機)",
     apiFormat: "openai",
     baseUrl: "http://localhost:1234/v1",
     keyEnv: "",
@@ -447,10 +448,10 @@ const PROVIDER_CATALOG = [
     models: [],
     fetchModels: true,
   },
-  // ── 自定义 / 第三方 ──
+  // ── 自訂 / 第三方 ──
   {
     id: "custom",
-    name: "第三方 OpenAI 兼容平台",
+    name: "第三方 OpenAI 相容平台",
     apiFormat: "openai",
     baseUrl: "",
     keyEnv: "",
@@ -461,7 +462,7 @@ const PROVIDER_CATALOG = [
 ];
 
 // ---------------------------------------------------------------------------
-// 日志 → stderr
+// 日誌 → stderr
 // ---------------------------------------------------------------------------
 
 const log  = (lv, m) => {
@@ -474,7 +475,7 @@ const warn  = (m) => log("warn", m);
 const error = (m) => log("error", m);
 
 // ---------------------------------------------------------------------------
-// 交互式 readline 工具
+// 互動式 readline 工具
 // ---------------------------------------------------------------------------
 
 function rl() {
@@ -501,7 +502,7 @@ function askSelect(question, options) {
       process.stderr.write(`    ${i + 1}. ${opt.label}${desc}\n`);
     });
     process.stderr.write(`\n`);
-    r.question(`  请选择 (1-${options.length}): `, (answer) => {
+    r.question(`  請選擇 (1-${options.length}): `, (answer) => {
       r.close();
       const n = parseInt(answer.trim(), 10);
       if (n >= 1 && n <= options.length) resolve(options[n - 1].value);
@@ -524,7 +525,7 @@ function askConfirm(question, defaultYes = true) {
 }
 
 // ---------------------------------------------------------------------------
-// 配置文件管理
+// 設定檔管理
 // ---------------------------------------------------------------------------
 
 function configPath() {
@@ -538,8 +539,8 @@ function configPath() {
 function loadConfig() {
   const p = configPath();
   if (!existsSync(p)) {
-    error(`配置文件不存在: ${p}`);
-    error("运行: node vision.mjs init  来初始化配置");
+    error(`設定檔不存在: ${p}`);
+    error("執行: node vision.mjs init  來初始化設定");
     process.exit(EXIT.NO_CONFIG);
   }
   try {
@@ -550,7 +551,7 @@ function loadConfig() {
     if (!Array.isArray(cfg.models)) cfg.models = [];
     return cfg;
   } catch (e) {
-    error(`配置文件解析失败: ${p}\n${e.message}`);
+    error(`設定檔解析失敗: ${p}\n${e.message}`);
     process.exit(EXIT.NO_CONFIG);
   }
 }
@@ -566,9 +567,9 @@ function saveConfig(cfg) {
   };
   const content = JSON.stringify(out, null, 2) + "\n";
   writeFileSync(target, content, "utf-8");
-  info(`配置已保存: ${target}`);
+  info(`設定已儲存: ${target}`);
 
-  // 同步到所有其他已安装位置
+  // 同步到所有其他已安裝位置
   const otherDirs = findOtherInstalls();
   for (const dir of otherDirs) {
     try {
@@ -579,7 +580,7 @@ function saveConfig(cfg) {
   }
 }
 
-/** 查找除当前 skill 目录外的所有已安装位置 */
+/** 查詢目前 skill 目錄以外的所有已安裝位置 */
 function findOtherInstalls() {
   const home = homedir();
   const current = SKILL_DIR;
@@ -606,7 +607,7 @@ function findModel(cfg, name) {
 }
 
 // ---------------------------------------------------------------------------
-// 从 API 自动拉取模型列表
+// 從 API 自動拉取模型列表
 // ---------------------------------------------------------------------------
 
 async function fetchModelsFromAPI(provider, apiKey, baseUrl) {
@@ -623,7 +624,7 @@ async function fetchModelsFromAPI(provider, apiKey, baseUrl) {
       if (!resp.ok) return null;
       const data = await resp.json();
       const list = (data.data || []).map((m) => m.id || m.name || m);
-      // 过滤可能支持视觉的模型（启发式）
+      // 過濾可能支援視覺的模型（啟發式）
       return list;
     }
 
@@ -643,7 +644,7 @@ async function fetchModelsFromAPI(provider, apiKey, baseUrl) {
 }
 
 /**
- * 过滤可能支持视觉的模型（启发式关键词匹配）
+ * 過濾可能支援視覺的模型（啟發式關鍵字比對）
  */
 function filterVisionModels(models) {
   if (!models || models.length === 0) return [];
@@ -659,7 +660,7 @@ function filterVisionModels(models) {
 }
 
 // ---------------------------------------------------------------------------
-// 交互式 init / add / edit
+// 互動式 init / add / edit
 // ---------------------------------------------------------------------------
 
 async function interactiveSetup(cfg, mode) {
@@ -679,12 +680,12 @@ async function interactiveSetup(cfg, mode) {
         process.exit(EXIT.BAD_ARGS);
       }
     } else if (cfg.models.length > 0) {
-      process.stderr.write(`\n  选择要编辑的模型:\n\n`);
+      process.stderr.write(`\n  選擇要編輯的模型:\n\n`);
       cfg.models.forEach((m, i) => {
         const primary = i === 0 ? " ★" : "";
         process.stderr.write(`    ${i + 1}. ${m.name} (${m.model})${primary}\n`);
       });
-      const sel = await askSelect("选择", cfg.models.map((m) => ({
+      const sel = await askSelect("選擇", cfg.models.map((m) => ({
         value: m.name, label: `${m.name} (${m.model})`,
       })));
       editTarget = cfg.models.find((m) => m.name === sel);
@@ -692,26 +693,26 @@ async function interactiveSetup(cfg, mode) {
   }
 
   process.stderr.write(`\n  ╔══════════════════════════════════════════════╗\n`);
-  process.stderr.write(`  ║  Vision Support — 铁律：仅用于图片识别      ║\n`);
+  process.stderr.write(`  ║  Vision Support — 鐵律：僅用於圖片辨識      ║\n`);
   process.stderr.write(`  ╚══════════════════════════════════════════════╝\n\n`);
 
-  // ── 第一步：选择 Provider ──
+  // ── 第一步：選擇 Provider ──
   const groups = [
-    { label: "国际平台", items: PROVIDER_CATALOG.filter((p) => !p.id.match(/^(dashscope|zhipuai|moonshot|stepfun|minimax|siliconflow|ollama|lmstudio|custom)$/)) },
-    { label: "国内平台", items: PROVIDER_CATALOG.filter((p) => p.id.match(/^(dashscope|zhipuai|moonshot|stepfun|minimax|siliconflow)$/)) },
-    { label: "本地部署", items: PROVIDER_CATALOG.filter((p) => p.id.match(/^(ollama|lmstudio)$/)) },
-    { label: "自定义", items: PROVIDER_CATALOG.filter((p) => p.id === "custom") },
+    { label: "國際平台", items: PROVIDER_CATALOG.filter((p) => !p.id.match(/^(dashscope|zhipuai|moonshot|stepfun|minimax|siliconflow|ollama|lmstudio|custom)$/)) },
+    { label: "中國平台", items: PROVIDER_CATALOG.filter((p) => p.id.match(/^(dashscope|zhipuai|moonshot|stepfun|minimax|siliconflow)$/)) },
+    { label: "本機部署", items: PROVIDER_CATALOG.filter((p) => p.id.match(/^(ollama|lmstudio)$/)) },
+    { label: "自訂", items: PROVIDER_CATALOG.filter((p) => p.id === "custom") },
   ];
 
   let provider;
 
   if (isEdit && editTarget) {
-    // 编辑模式：回显当前 provider
+    // 編輯模式：回顯目前 provider
     provider = PROVIDER_CATALOG.find((p) => p.id === editTarget.provider)
       || PROVIDER_CATALOG.find((p) => p.apiFormat === editTarget.provider);
     if (provider) {
-      process.stderr.write(`  当前 Provider: ${provider.name}\n`);
-      const change = await askConfirm("是否更换 Provider？", false);
+      process.stderr.write(`  目前 Provider: ${provider.name}\n`);
+      const change = await askConfirm("是否更換 Provider？", false);
       if (!change) {
         // 保持原 provider
       } else {
@@ -721,7 +722,7 @@ async function interactiveSetup(cfg, mode) {
   }
 
   if (!provider) {
-    process.stderr.write(`  选择识图模型平台:\n\n`);
+    process.stderr.write(`  選擇辨識模型平台:\n\n`);
     let idx = 1;
     const allOpts = [];
     for (const g of groups) {
@@ -732,26 +733,26 @@ async function interactiveSetup(cfg, mode) {
         idx++;
       }
     }
-    const sel = await ask(`请选择 (1-${allOpts.length})`);
+    const sel = await ask(`請選擇 (1-${allOpts.length})`);
     const n = parseInt(sel, 10);
     if (n < 1 || n > allOpts.length) {
-      error("无效选择");
+      error("無效選擇");
       process.exit(EXIT.BAD_ARGS);
     }
     provider = allOpts[n - 1];
   }
 
-  process.stderr.write(`\n  ✓ 已选择: ${provider.name}\n\n`);
+  process.stderr.write(`\n  ✓ 已選擇: ${provider.name}\n\n`);
 
-  // ── 第二步：API 密钥 ──
+  // ── 第二步：API 金鑰 ──
   let apiKey = provider.apiKey || "";
   let apiKeyEnv = provider.keyEnv || "";
 
   if (isEdit && editTarget) {
-    const curKey = editTarget.apiKey ? "***" + editTarget.apiKey.slice(-4) : "(未设置)";
-    const curEnv = editTarget.apiKeyEnv || "(未设置)";
-    process.stderr.write(`  当前密钥: ${curKey}  环境变量: ${curEnv}\n`);
-    const change = await askConfirm("是否修改密钥？", false);
+    const curKey = editTarget.apiKey ? "***" + editTarget.apiKey.slice(-4) : "(未設定)";
+    const curEnv = editTarget.apiKeyEnv || "(未設定)";
+    process.stderr.write(`  目前金鑰: ${curKey}  環境變數: ${curEnv}\n`);
+    const change = await askConfirm("是否修改金鑰？", false);
     if (!change) {
       apiKey = editTarget.apiKey || "";
       apiKeyEnv = editTarget.apiKeyEnv || "";
@@ -760,10 +761,10 @@ async function interactiveSetup(cfg, mode) {
 
   if (isInit || (isEdit && !editTarget) || (isEdit && editTarget && (apiKey === "" && apiKeyEnv === ""))) {
     if (provider.keyEnv) {
-      process.stderr.write(`  推荐: 直接设置密钥值（安全存储在本地配置中）\n`);
-      process.stderr.write(`  或输入环境变量名（如 ${provider.keyEnv}）\n`);
+      process.stderr.write(`  建議: 直接設定金鑰值（安全儲存在本機設定中）\n`);
+      process.stderr.write(`  或輸入環境變數名稱（如 ${provider.keyEnv}）\n`);
     }
-    const keyInput = await ask("API 密钥（或环境变量名，直接回车跳过）");
+    const keyInput = await ask("API 金鑰（或環境變數名稱，直接 Enter 跳過）");
     if (keyInput) {
       if (/^[A-Z_][A-Z0-9_]*$/.test(keyInput)) {
         apiKeyEnv = keyInput;
@@ -777,54 +778,54 @@ async function interactiveSetup(cfg, mode) {
 
   const effectiveKey = apiKey || (apiKeyEnv && process.env[apiKeyEnv]) || "";
 
-  // ── 第三步：API 地址（自定义或编辑模式）──
+  // ── 第三步：API 位址（自訂或編輯模式）──
   let baseUrl = provider.baseUrl || "";
 
   if (provider.custom) {
-    baseUrl = await ask("API 地址 (baseUrl)", baseUrl);
+    baseUrl = await ask("API 位址 (baseUrl)", baseUrl);
     if (!baseUrl) {
-      error("自定义平台必须填写 API 地址");
+      error("自訂平台必須填寫 API 位址");
       process.exit(EXIT.BAD_ARGS);
     }
   } else if (isEdit && editTarget) {
     const curUrl = editTarget.baseUrl || provider.baseUrl;
-    process.stderr.write(`  当前地址: ${curUrl}\n`);
-    const newUrl = await ask("新地址（直接回车保持不变）", curUrl);
+    process.stderr.write(`  目前位址: ${curUrl}\n`);
+    const newUrl = await ask("新位址（直接 Enter 保持不變）", curUrl);
     baseUrl = newUrl;
   } else {
-    process.stderr.write(`  API 地址: ${baseUrl}\n`);
-    const newUrl = await ask("自定义地址（直接回车使用默认）", baseUrl);
+    process.stderr.write(`  API 位址: ${baseUrl}\n`);
+    const newUrl = await ask("自訂位址（直接 Enter 使用預設）", baseUrl);
     if (newUrl && newUrl !== baseUrl) baseUrl = newUrl;
   }
 
-  // ── 第四步：选择模型 ──
+  // ── 第四步：選擇模型 ──
   let modelId = "";
   let modelName = "";
 
   if (isEdit && editTarget) {
-    process.stderr.write(`\n  当前模型: ${editTarget.model}\n`);
-    const change = await askConfirm("是否更换模型？", false);
+    process.stderr.write(`\n  目前模型: ${editTarget.model}\n`);
+    const change = await askConfirm("是否更換模型？", false);
     if (!change) {
       modelId = editTarget.model;
     }
   }
 
   if (!modelId) {
-    // 尝试从 API 拉取模型列表
+    // 嘗試從 API 拉取模型列表
     let remoteModels = null;
     if (effectiveKey && provider.fetchModels) {
-      process.stderr.write(`\n  正在从 ${provider.name} 获取模型列表...`);
+      process.stderr.write(`\n  正在從 ${provider.name} 取得模型清單...`);
       try {
         const all = await fetchModelsFromAPI(provider, effectiveKey, baseUrl);
         if (all && all.length > 0) {
           const vision = filterVisionModels(all);
           remoteModels = vision.length > 0 ? vision : all;
-          process.stderr.write(` ✓ 找到 ${remoteModels.length} 个模型\n`);
+          process.stderr.write(` ✓ 找到 ${remoteModels.length} 個模型\n`);
         } else {
           process.stderr.write(` 未找到模型\n`);
         }
       } catch {
-        process.stderr.write(` 失败\n`);
+        process.stderr.write(` 失敗\n`);
       }
     }
 
@@ -834,10 +835,10 @@ async function interactiveSetup(cfg, mode) {
         process.stderr.write(`    ${i + 1}. ${m}\n`);
       });
       if (remoteModels.length > 30) {
-        process.stderr.write(`    ... 共 ${remoteModels.length} 个，仅显示前 30 个\n`);
+        process.stderr.write(`    ... 共 ${remoteModels.length} 個，僅顯示前 30 個\n`);
       }
       process.stderr.write(`\n`);
-      const sel = await ask(`请选择 (1-${Math.min(remoteModels.length, 30)})，或直接输入模型名称`);
+      const sel = await ask(`請選擇 (1-${Math.min(remoteModels.length, 30)})，或直接輸入模型名稱`);
       const n = parseInt(sel, 10);
       if (n >= 1 && n <= Math.min(remoteModels.length, 30)) {
         modelId = remoteModels[n - 1];
@@ -845,13 +846,13 @@ async function interactiveSetup(cfg, mode) {
         modelId = sel;
       }
     } else if (provider.models.length > 0) {
-      // 使用预置模型列表
-      process.stderr.write(`\n  推荐模型:\n\n`);
+      // 使用預設模型清單
+      process.stderr.write(`\n  推薦模型:\n\n`);
       provider.models.forEach((m, i) => {
         process.stderr.write(`    ${i + 1}. ${m}\n`);
       });
       process.stderr.write(`\n`);
-      const sel = await ask(`请选择 (1-${provider.models.length})，或直接输入模型名称`);
+      const sel = await ask(`請選擇 (1-${provider.models.length})，或直接輸入模型名稱`);
       const n = parseInt(sel, 10);
       if (n >= 1 && n <= provider.models.length) {
         modelId = provider.models[n];
@@ -859,16 +860,16 @@ async function interactiveSetup(cfg, mode) {
         modelId = sel;
       }
     } else {
-      modelId = await ask("模型名称 (model id)");
+      modelId = await ask("模型名稱 (model id)");
     }
 
     if (!modelId) {
-      error("必须指定模型");
+      error("必須指定模型");
       process.exit(EXIT.BAD_ARGS);
     }
   }
 
-  // ── 生成友好名称 ──
+  // ── 產生易讀名稱 ──
   let friendlyName;
   if (isEdit && editTarget) {
     friendlyName = editTarget.name;
@@ -902,16 +903,16 @@ async function interactiveSetup(cfg, mode) {
 
   process.stderr.write(`\n`);
   if (isInit) {
-    process.stderr.write(`  ✓ 主模型已配置: ${friendlyName}\n`);
+    process.stderr.write(`  ✓ 主模型已設定: ${friendlyName}\n`);
   } else if (isEdit) {
     process.stderr.write(`  ✓ 模型已更新: ${friendlyName}\n`);
   } else {
-    process.stderr.write(`  ✓ 已添加 fallback: ${friendlyName}\n`);
+    process.stderr.write(`  ✓ 已新增 fallback: ${friendlyName}\n`);
   }
 
   if (isInit && cfg.models.length === 1) {
-    process.stderr.write(`\n  提示: 可以继续运行 "node vision.mjs config add" 添加备用模型\n`);
-    const more = await askConfirm("现在添加 fallback 模型？", false);
+    process.stderr.write(`\n  提示: 可以繼續執行 "node vision.mjs config add" 新增備援模型\n`);
+    const more = await askConfirm("現在新增 fallback 模型？", false);
     if (more) {
       await interactiveSetup(cfg, "add");
     }
@@ -919,42 +920,42 @@ async function interactiveSetup(cfg, mode) {
 }
 
 // ---------------------------------------------------------------------------
-// config 子命令
+// config 子指令
 // ---------------------------------------------------------------------------
 
 function cmdConfigList(cfg) {
   const models = cfg.models || [];
   if (models.length === 0) {
-    process.stdout.write("  尚未配置模型。运行: node vision.mjs init\n");
+    process.stdout.write("  尚未設定模型。執行: node vision.mjs init\n");
     return;
   }
-  process.stdout.write(`\n  已配置 ${models.length} 个识图模型:\n\n`);
+  process.stdout.write(`\n  已設定 ${models.length} 個辨識模型:\n\n`);
   for (let i = 0; i < models.length; i++) {
     const m = models[i];
     const primary = i === 0 ? " ★ 主模型" : `   回退 ${i}`;
     const keyStatus = resolveApiKey(m) ? "✓" : "✗";
     process.stdout.write(
       `  ${i + 1}. ${m.name}${primary}\n` +
-      `     模型: ${m.model}  |  密钥: ${keyStatus}  |  地址: ${m.baseUrl || "默认"}\n\n`
+      `     模型: ${m.model}  |  金鑰: ${keyStatus}  |  位址: ${m.baseUrl || "預設"}\n\n`
     );
   }
-  process.stdout.write("  铁律：以上模型仅用于图片内容识别，绝不参与主逻辑推理。\n\n");
+  process.stdout.write("  鐵律：以上模型僅用於圖片內容辨識，絕不參與主邏輯推理。\n\n");
 }
 
 function cmdConfigRemove(cfg, name) {
-  if (!name) { error("用法: config remove <名称>"); process.exit(EXIT.BAD_ARGS); }
+  if (!name) { error("用法: config remove <名稱>"); process.exit(EXIT.BAD_ARGS); }
   const idx = cfg.models.findIndex((m) => m.name === name || m.model === name);
   if (idx === -1) { error(`未找到: ${name}`); process.exit(EXIT.BAD_ARGS); }
   const removed = cfg.models.splice(idx, 1)[0];
   saveConfig(cfg);
-  console.log(`✓ 已删除: ${removed.name}`);
+  console.log(`✓ 已刪除: ${removed.name}`);
 }
 
 function cmdConfigPrimary(cfg, name) {
   if (!name) { cmdConfigList(cfg); return; }
   const idx = cfg.models.findIndex((m) => m.name === name || m.model === name);
   if (idx === -1) { error(`未找到: ${name}`); process.exit(EXIT.BAD_ARGS); }
-  if (idx === 0) { info(`"${cfg.models[0].name}" 已经是主模型`); return; }
+  if (idx === 0) { info(`"${cfg.models[0].name}" 已經是主模型`); return; }
   const [m] = cfg.models.splice(idx, 1);
   cfg.models.unshift(m);
   saveConfig(cfg);
@@ -962,22 +963,22 @@ function cmdConfigPrimary(cfg, name) {
 }
 
 function cmdConfigSetKey(cfg, name, key) {
-  if (!name || !key) { error("用法: config set-key <名称> <密钥或环境变量名>"); process.exit(EXIT.BAD_ARGS); }
+  if (!name || !key) { error("用法: config set-key <名稱> <金鑰或環境變數名稱>"); process.exit(EXIT.BAD_ARGS); }
   const m = findModel(cfg, name);
   if (!m) { error(`未找到: ${name}`); process.exit(EXIT.BAD_ARGS); }
   if (/^[A-Z_][A-Z0-9_]*$/.test(key)) {
     m.apiKeyEnv = key; m.apiKey = "";
     saveConfig(cfg);
-    console.log(`✓ ${m.name} → 环境变量 ${key}`);
+    console.log(`✓ ${m.name} → 環境變數 ${key}`);
   } else {
     m.apiKey = key;
     saveConfig(cfg);
-    console.log(`✓ ${m.name} → 密钥已设置`);
+    console.log(`✓ ${m.name} → 金鑰已設定`);
   }
 }
 
 function cmdConfigSetUrl(cfg, name, url) {
-  if (!name || !url) { error("用法: config set-url <名称> <API地址>"); process.exit(EXIT.BAD_ARGS); }
+  if (!name || !url) { error("用法: config set-url <名稱> <API位址>"); process.exit(EXIT.BAD_ARGS); }
   const m = findModel(cfg, name);
   if (!m) { error(`未找到: ${name}`); process.exit(EXIT.BAD_ARGS); }
   m.baseUrl = url;
@@ -989,9 +990,9 @@ async function cmdConfigTest(cfg, name) {
   const models = name
     ? cfg.models.filter((m) => m.name === name || m.model === name)
     : cfg.models;
-  if (models.length === 0) { error(name ? `未找到: ${name}` : "无模型"); return; }
+  if (models.length === 0) { error(name ? `未找到: ${name}` : "無模型"); return; }
 
-  info("测试连通性...\n");
+  info("測試連通性...\n");
   const testImage = {
     base64: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8D4HwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
     mimeType: "image/png", isUrl: false,
@@ -1000,26 +1001,26 @@ async function cmdConfigTest(cfg, name) {
   for (const model of models) {
     const tag = `${model.name} (${model.model})`;
     const apiKey = resolveApiKey(model);
-    if (!apiKey) { error(`  ${tag}: ✗ 缺少密钥`); continue; }
+    if (!apiKey) { error(`  ${tag}: ✗ 缺少金鑰`); continue; }
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 15000);
     try {
-      info(`  测试 ${tag}...`);
+      info(`  測試 ${tag}...`);
       await callModel(model, [testImage], "Reply OK.", ctrl.signal);
       clearTimeout(timer);
-      info(`  ${tag}: ✓ 连通正常`);
+      info(`  ${tag}: ✓ 連通正常`);
       ok++;
     } catch (err) {
       clearTimeout(timer);
-      error(`  ${tag}: ✗ ${err.name === "AbortError" ? "超时" : err.message}`);
+      error(`  ${tag}: ✗ ${err.name === "AbortError" ? "逾時" : err.message}`);
     }
   }
-  info(`\n测试完成: ${ok}/${models.length} 正常`);
-  if (ok === 0) { error("无可用模型"); process.exit(EXIT.ALL_FAILED); }
+  info(`\n測試完成: ${ok}/${models.length} 正常`);
+  if (ok === 0) { error("無可用模型"); process.exit(EXIT.ALL_FAILED); }
 }
 
 // ---------------------------------------------------------------------------
-// 图片处理
+// 圖片處理
 // ---------------------------------------------------------------------------
 
 function isUrl(s) { return /^https?:\/\//i.test(s); }
@@ -1039,23 +1040,23 @@ function parseArgs(raw) {
 async function loadImage(src) {
   if (isUrl(src)) return { path: src, base64: null, mimeType: null, isUrl: true };
   const abs = resolve(src);
-  if (!existsSync(abs)) { error(`图片不存在: ${abs}`); process.exit(EXIT.NO_IMAGE); }
+  if (!existsSync(abs)) { error(`圖片不存在: ${abs}`); process.exit(EXIT.NO_IMAGE); }
   const ext = extname(abs).toLowerCase();
-  if (!SUPPORTED_EXT.has(ext)) { error(`不支持: ${ext}`); process.exit(EXIT.BAD_FORMAT); }
+  if (!SUPPORTED_EXT.has(ext)) { error(`不支援: ${ext}`); process.exit(EXIT.BAD_FORMAT); }
   const stat = statSync(abs);
-  if (stat.size > MAX_IMAGE_SIZE) { error(`过大: ${(stat.size / 1024 / 1024).toFixed(1)}MB`); process.exit(EXIT.TOO_LARGE); }
+  if (stat.size > MAX_IMAGE_SIZE) { error(`過大: ${(stat.size / 1024 / 1024).toFixed(1)}MB`); process.exit(EXIT.TOO_LARGE); }
   const buffer = await readFile(abs);
-  info(`已加载: ${basename(abs)} (${(stat.size / 1024).toFixed(1)}KB)`);
+  info(`已載入: ${basename(abs)} (${(stat.size / 1024).toFixed(1)}KB)`);
   return { path: abs, base64: buffer.toString("base64"), mimeType: MIME_MAP[ext] || "image/octet-stream", isUrl: false };
 }
 
 // ---------------------------------------------------------------------------
-// Provider API 调用（均支持多图）
+// Provider API 呼叫（均支援多圖）
 // ---------------------------------------------------------------------------
 
 async function callOpenAI(model, images, prompt, signal) {
   const apiKey = resolveApiKey(model);
-  if (!apiKey) throw new Error(`缺少密钥`);
+  if (!apiKey) throw new Error(`缺少金鑰`);
   const base = (model.baseUrl || "https://api.openai.com/v1").replace(/\/+$/, "");
   const imageBlocks = images.map((img) =>
     img.isUrl
@@ -1079,7 +1080,7 @@ async function callOpenAI(model, images, prompt, signal) {
 
 async function callGoogle(model, images, prompt, signal) {
   const apiKey = resolveApiKey(model);
-  if (!apiKey) throw new Error(`缺少密钥`);
+  if (!apiKey) throw new Error(`缺少金鑰`);
   const base = (model.baseUrl || "https://generativelanguage.googleapis.com/v1beta").replace(/\/+$/, "");
   const parts = [{ text: prompt }];
   for (const img of images) {
@@ -1102,7 +1103,7 @@ async function callGoogle(model, images, prompt, signal) {
 
 async function callAnthropic(model, images, prompt, signal) {
   const apiKey = resolveApiKey(model);
-  if (!apiKey) throw new Error(`缺少密钥`);
+  if (!apiKey) throw new Error(`缺少金鑰`);
   const base = (model.baseUrl || "https://api.anthropic.com").replace(/\/+$/, "");
   const content = [];
   for (const img of images) {
@@ -1129,17 +1130,17 @@ async function callModel(model, images, prompt, signal) {
   const fmt = (model.provider || "openai").toLowerCase();
   if (fmt === "google" || fmt === "gemini") return callGoogle(model, images, prompt, signal);
   if (fmt === "anthropic" || fmt === "claude") return callAnthropic(model, images, prompt, signal);
-  return callOpenAI(model, images, prompt, signal); // 默认：所有 OpenAI 兼容平台
+  return callOpenAI(model, images, prompt, signal); // 預設：所有 OpenAI 相容平台
 }
 
 // ---------------------------------------------------------------------------
-// 核心：多图识别 + 回退
+// 核心：多圖辨識 + 回退
 // ---------------------------------------------------------------------------
 
 async function recognize(cfg, imageSources, prompt) {
   const models = cfg.models || [];
   if (models.length === 0) {
-    error("没有配置模型，运行: node vision.mjs init");
+    error("沒有設定模型，執行: node vision.mjs init");
     process.exit(EXIT.NO_CONFIG);
   }
 
@@ -1152,7 +1153,7 @@ async function recognize(cfg, imageSources, prompt) {
 
   const images = [];
   for (const src of imageSources) images.push(await loadImage(src));
-  info(`共 ${images.length} 张图片`);
+  info(`共 ${images.length} 張圖片`);
 
   const finalPrompt = prompt || cfg.defaultPrompt ||
     "Please describe this image in detail. If it shows a UI/web page, describe the layout, elements, colors, and any visible issues.";
@@ -1168,21 +1169,21 @@ async function recognize(cfg, imageSources, prompt) {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), timeout);
     try {
-      info(`${tag} 调用中...`);
+      info(`${tag} 呼叫中...`);
       const result = await callModel(model, images, effectivePrompt, ctrl.signal);
       clearTimeout(timer);
-      if (!result?.trim()) throw new Error("返回为空");
+      if (!result?.trim()) throw new Error("回傳為空");
       info(`${tag} ✓`);
       return { success: true, model: model.name, modelId: model.model, provider: model.provider, imageCount: images.length, result: result.trim() };
     } catch (err) {
       clearTimeout(timer);
-      error(`${tag} ✗ ${err.name === "AbortError" ? "超时" : err.message}`);
-      errors.push({ model: model.name, error: err.name === "AbortError" ? "超时" : err.message });
+      error(`${tag} ✗ ${err.name === "AbortError" ? "逾時" : err.message}`);
+      errors.push({ model: model.name, error: err.name === "AbortError" ? "逾時" : err.message });
     }
   }
 
-  error("所有模型均失败");
-  return { success: false, error: "所有识图模型均调用失败", details: errors };
+  error("所有模型均失敗");
+  return { success: false, error: "所有辨識模型均呼叫失敗", details: errors };
 }
 
 // ---------------------------------------------------------------------------
@@ -1191,36 +1192,36 @@ async function recognize(cfg, imageSources, prompt) {
 
 function showHelp() {
   console.log(`
-support-vision — 非多模态模型的图片识别桥接
+support-vision — 非多模態模型的圖片辨識橋接
 
-铁律: 本工具配置的模型仅用于图片内容识别，绝不参与主逻辑推理。
+鐵律: 本工具設定的模型僅用於圖片內容辨識，絕不參與主邏輯推理。
 
 ━━━ 初始化 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   node vision.mjs init
-    交互式选择 Provider → 填密钥 → 选模型，一步到位
+    互動式選擇 Provider → 填金鑰 → 選模型，一步到位
 
-━━━ 识图 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━ 辨識圖片 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  node vision.mjs <图片...> [prompt]
-    支持同时传入多张图片，空格分隔，最后跟可选提示语
+  node vision.mjs <圖片...> [prompt]
+    支援同時傳入多張圖片，空格分隔，最後跟可選提示語
 
-━━━ 配置管理 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━ 設定管理 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   node vision.mjs config list                   列出模型
-  node vision.mjs config add                    交互式添加 fallback
-  node vision.mjs config edit [name]            交互式编辑模型
-  node vision.mjs config primary [name]         查看/设置主模型
-  node vision.mjs config remove <name>          删除模型
-  node vision.mjs config set-key <name> <key>   设置密钥
-  node vision.mjs config set-url <name> <url>   设置 API 地址
-  node vision.mjs config test [name]            测试连通性
+  node vision.mjs config add                    互動式新增 fallback
+  node vision.mjs config edit [name]            互動式編輯模型
+  node vision.mjs config primary [name]         查看/設定主模型
+  node vision.mjs config remove <name>          刪除模型
+  node vision.mjs config set-key <name> <key>   設定金鑰
+  node vision.mjs config set-url <name> <url>   設定 API 位址
+  node vision.mjs config test [name]            測試連通性
 
-━━━ 环境变量 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━ 環境變數 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  VISION_CONFIG_PATH    配置文件路径
-  VISION_DEFAULT_MODEL  覆盖主模型
-  VISION_API_KEY        全局密钥回退
+  VISION_CONFIG_PATH    設定檔路徑
+  VISION_DEFAULT_MODEL  覆蓋主模型
+  VISION_API_KEY        全域金鑰回退
 `);
 }
 
@@ -1279,11 +1280,11 @@ async function main() {
     return;
   }
 
-  // ── 识图 ──
+  // ── 辨識圖片 ──
   const cfg = loadConfig();
   const { images: imageSources, prompt } = parseArgs(args);
   if (imageSources.length === 0) {
-    error("未检测到图片。用法: node vision.mjs <图片...> [prompt]");
+    error("未偵測到圖片。用法: node vision.mjs <圖片...> [prompt]");
     process.exit(EXIT.NO_IMAGE);
   }
 
@@ -1298,6 +1299,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  error(`异常: ${err.message}`);
+  error(`異常: ${err.message}`);
   process.exit(EXIT.ALL_FAILED);
 });

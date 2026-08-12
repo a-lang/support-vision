@@ -1,4 +1,5 @@
 node_modules/
 config.json
 opencode.json
+.opencode
 VISION_PROXY_FINDINGS.md

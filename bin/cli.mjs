@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 
 /**
- * support-vision CLI 入口（npm 全局安装后使用）
+ * support-vision CLI 入口（npm 全域安裝後使用）
  *
  * 用法:
- *   support-vision <图片...> [prompt]       识图
+ *   support-vision <圖片...> [prompt]       辨識圖片
  *   support-vision init                     初始化
- *   support-vision config <cmd> [args]      配置管理
+ *   support-vision config <cmd> [args]      設定管理
  *
- * 本文件是 npm bin 入口，实际逻辑在 scripts/vision.mjs
+ * 本檔案是 npm bin 入口，實際邏輯在 scripts/vision.mjs
  */
 
 import { dirname, join, resolve } from "node:path";
@@ -21,16 +21,16 @@ const PKG_DIR = resolve(__dirname, "..");
 const SKILL_NAME = "support-vision";
 
 /**
- * 找到 vision.mjs 的位置
- * 1) npm 安装：在同目录的 scripts/vision.mjs
- * 2) skill 安装：在 ~/.agents/skills/support-vision/scripts/vision.mjs
+ * 找出 vision.mjs 的位置
+ * 1) npm 安裝：在同目錄的 scripts/vision.mjs
+ * 2) skill 安裝：在 ~/.agents/skills/support-vision/scripts/vision.mjs
  */
 function findScript() {
-  // 优先用包内的
+  // 優先使用包內的
   const local = join(PKG_DIR, "scripts", "vision.mjs");
   if (existsSync(local)) return local;
 
-  // 回退到 skill 目录
+  // 回退到 skill 目錄
   const home = homedir();
   const candidates = [
     join(home, ".agents", "skills", SKILL_NAME, "scripts", "vision.mjs"),
@@ -40,15 +40,15 @@ function findScript() {
     if (existsSync(p)) return p;
   }
 
-  console.error(`✖ 找不到 vision.mjs，请重新安装: npm install -g support-vision`);
+  console.error(`✖ 找不到 vision.mjs，請重新安裝: npm install -g support-vision`);
   process.exit(1);
 }
 
-// 直接把参数透传给 vision.mjs
+// 直接將參數透傳給 vision.mjs
 const scriptPath = findScript();
 const args = process.argv.slice(2).map((a) => `"${a.replace(/"/g, '\\"')}"`).join(" ");
 
-// 用动态 import 的方式不太好控制进程退出，直接用 child_process
+// 用動態 import 的方式不太好控制程序退出，直接用 child_process
 import { execFileSync } from "node:child_process";
 try {
   const result = execFileSync("node", [scriptPath, ...process.argv.slice(2)], {
@@ -57,7 +57,7 @@ try {
     timeout: 120000,
   });
 } catch (err) {
-  // execFileSync 在非零退出码时会 throw，但 stdio: inherit 已经输出了内容
-  // 只需要传递退出码
+  // execFileSync 在非零退出碼時會 throw，但 stdio: inherit 已經輸出了內容
+  // 只需要傳遞退出碼
   if (err.status) process.exit(err.status);
 }

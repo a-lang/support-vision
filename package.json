@@ -1,7 +1,7 @@
 {
   "name": "support-vision",
   "version": "1.0.1",
-  "description": "为非多模态大模型（deepseek、GLM、mimo 等）提供图片识别能力的 Agent Skill。支持多图识别、多模型回退、19+ 平台。",
+  "description": "為非多模態大模型（deepseek、GLM、mimo 等）提供圖片辨識能力的 Agent Skill。支援多圖辨識、多模型回退、19+ 平台。",
   "keywords": [
     "agent-skill",
     "vision",

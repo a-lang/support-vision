@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 
 /**
- * support-vision 安装脚本
+ * support-vision 安裝指令碼
  *
  * 用法:
- *   node install.mjs              # 交互式选择安装到哪个 agent（默认全局）
- *   node install.mjs --all        # 装到所有已知 agent
- *   node install.mjs --local      # 装到当前项目目录
- *   node install.mjs --dir <path> # 指定目录
- *   node install.mjs --uninstall  # 卸载
+ *   node install.mjs              # 互動式選擇安裝到哪個 agent（預設全域）
+ *   node install.mjs --all        # 安裝到所有已知 agent
+ *   node install.mjs --local      # 安裝到目前專案目錄
+ *   node install.mjs --dir <path> # 指定目錄
+ *   node install.mjs --uninstall  # 解除安裝
  *
- * 一行安装:
+ * 一行安裝:
  *   git clone https://github.com/a-lang/support-vision.git /tmp/support-vision && node /tmp/support-vision/install.mjs
  *   Mac/Linux: bash -c "$(curl -fsSL https://raw.githubusercontent.com/a-lang/support-vision/main/install.sh)"
  */
@@ -35,14 +35,14 @@ const SOURCE_DIR = resolve(__dirname);
 const SKILL_NAME = "support-vision";
 
 // ---------------------------------------------------------------------------
-// 已知 agent 安装位置
+// 已知 agent 安裝位置
 // ---------------------------------------------------------------------------
 
 const KNOWN_AGENTS = [
   {
     id: "common",
     name: "通用 Agent Skills",
-    desc: "Pi / Codex / Cursor / Trae / Windsurf 等所有支持 Agent Skills 标准的工具",
+    desc: "Pi / Codex / Cursor / Trae / Windsurf 等所有支援 Agent Skills 標準的工具",
     dir: join(homedir(), ".agents", "skills"),
   },
   {
@@ -54,7 +54,7 @@ const KNOWN_AGENTS = [
 ];
 
 // ---------------------------------------------------------------------------
-// 工具函数
+// 工具函式
 // ---------------------------------------------------------------------------
 
 function ask(question) {
@@ -87,7 +87,7 @@ function banner(text) {
 }
 
 // ---------------------------------------------------------------------------
-// 复制 skill 文件
+// 複製 skill 檔案
 // ---------------------------------------------------------------------------
 
 const FILES_TO_COPY = [
@@ -98,7 +98,7 @@ const FILES_TO_COPY = [
 ];
 
 function copySkill(destDir) {
-  // 备份用户配置（如果有）
+  // 備份使用者設定（如果有）
   const configPath = join(destDir, "config.json");
   let userConfig = null;
   if (existsSync(configPath)) {
@@ -114,54 +114,54 @@ function copySkill(destDir) {
     if (existsSync(src)) cpSync(src, dst);
   }
 
-  // 恢复用户配置
+  // 還原使用者設定
   if (userConfig) {
     writeFileSync(configPath, userConfig, "utf-8");
   }
 }
 
 // ---------------------------------------------------------------------------
-// 安装
+// 安裝
 // ---------------------------------------------------------------------------
 
 async function install(opts) {
-  // --local: 装到当前项目
+  // --local: 安裝到目前專案
   if (opts.local) {
     const destDir = join(process.cwd(), ".agents", "skills", SKILL_NAME);
-    banner(`${SKILL_NAME} 安装（项目级）`);
+    banner(`${SKILL_NAME} 安裝（專案級）`);
     copySkill(destDir);
-    process.stdout.write(`\n  ✓ 已安装到: ${destDir}\n\n`);
+    process.stdout.write(`\n  ✓ 已安裝到: ${destDir}\n\n`);
     return;
   }
 
-  // --dir: 指定目录
+  // --dir: 指定目錄
   if (opts.dir) {
     const destDir = join(resolve(opts.dir), SKILL_NAME);
-    banner(`${SKILL_NAME} 安装`);
+    banner(`${SKILL_NAME} 安裝`);
     copySkill(destDir);
-    process.stdout.write(`\n  ✓ 已安装到: ${destDir}\n`);
+    process.stdout.write(`\n  ✓ 已安裝到: ${destDir}\n`);
     showNextSteps(destDir);
     return;
   }
 
-  // --all: 全装
+  // --all: 全部安裝
   if (opts.all) {
-    banner(`${SKILL_NAME} 安装`);
+    banner(`${SKILL_NAME} 安裝`);
     installToAgents(KNOWN_AGENTS);
     return;
   }
 
-  // 交互式选择
-  banner(`${SKILL_NAME} 安装`);
+  // 互動式選擇
+  banner(`${SKILL_NAME} 安裝`);
 
-  process.stdout.write(`  选择要安装到哪些 agent:\n\n`);
+  process.stdout.write(`  選擇要安裝到哪些 agent:\n\n`);
   KNOWN_AGENTS.forEach((agent, i) => {
     process.stdout.write(`    ${i + 1}. ${agent.name}\n`);
     process.stdout.write(`       ${agent.desc}\n\n`);
   });
-  process.stdout.write(`    ${KNOWN_AGENTS.length + 1}. ALL  全部安装\n\n`);
+  process.stdout.write(`    ${KNOWN_AGENTS.length + 1}. ALL  全部安裝\n\n`);
 
-  const input = await ask(`请选择 (1-${KNOWN_AGENTS.length + 1}，可多选如 "1 2")`);
+  const input = await ask(`請選擇 (1-${KNOWN_AGENTS.length + 1}，可多選如 "1 2")`);
 
   if (!input) {
     process.stdout.write("  已取消\n");
@@ -192,7 +192,7 @@ function installToAgents(agents) {
   for (const agent of agents) {
     const destDir = join(agent.dir, SKILL_NAME);
 
-    // 备份用户配置
+    // 備份使用者設定
     const configPath = join(destDir, "config.json");
     let userConfig = null;
     if (existsSync(configPath)) {
@@ -202,7 +202,7 @@ function installToAgents(agents) {
     if (existsSync(destDir)) rmSync(destDir, { recursive: true, force: true });
     copySkill(destDir);
 
-    // 恢复用户配置
+    // 還原使用者設定
     if (userConfig) {
       writeFileSync(configPath, userConfig, "utf-8");
     }
@@ -212,16 +212,16 @@ function installToAgents(agents) {
     installed.push(destDir);
   }
 
-  process.stdout.write(`  共安装到 ${installed.length} 个位置\n`);
+  process.stdout.write(`  共安裝到 ${installed.length} 個位置\n`);
   showNextSteps(installed[0]);
 }
 
 async function showNextSteps(destDir) {
   process.stdout.write(`\n  ━━━ 下一步 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`);
-  process.stdout.write(`  初始化模型配置:\n\n`);
+  process.stdout.write(`  初始化模型設定:\n\n`);
   process.stdout.write(`    node ${join(destDir, "scripts", "vision.mjs")} init\n\n`);
 
-  const doInit = await askConfirm("是否现在初始化？", true);
+  const doInit = await askConfirm("是否現在初始化？", true);
   if (doInit) {
     process.stdout.write("\n");
     try {
@@ -229,34 +229,34 @@ async function showNextSteps(destDir) {
     } catch {}
   }
 
-  process.stdout.write(`\n  ✓ 安装完成！\n\n`);
+  process.stdout.write(`\n  ✓ 安裝完成！\n\n`);
 }
 
 // ---------------------------------------------------------------------------
-// 卸载
+// 解除安裝
 // ---------------------------------------------------------------------------
 
 async function uninstall() {
-  banner(`${SKILL_NAME} 卸载`);
+  banner(`${SKILL_NAME} 解除安裝`);
 
   const locations = [
     ...KNOWN_AGENTS.map((a) => ({ name: a.name, dir: join(a.dir, SKILL_NAME) })),
-    { name: "当前项目", dir: join(process.cwd(), ".agents", "skills", SKILL_NAME) },
+    { name: "目前專案", dir: join(process.cwd(), ".agents", "skills", SKILL_NAME) },
   ];
 
   const installed = locations.filter((l) => existsSync(l.dir));
 
   if (installed.length === 0) {
-    process.stdout.write("  未检测到已安装的 support-vision\n");
+    process.stdout.write("  未偵測到已安裝的 support-vision\n");
     process.exit(0);
   }
 
-  process.stdout.write("  检测到安装:\n\n");
+  process.stdout.write("  偵測到安裝:\n\n");
   for (const l of installed) {
     process.stdout.write(`    - ${l.name}: ${l.dir}\n`);
   }
 
-  const confirm = await askConfirm("\n  确认卸载以上所有？", false);
+  const confirm = await askConfirm("\n  確認解除安裝以上所有？", false);
   if (!confirm) {
     process.stdout.write("  已取消\n");
     process.exit(0);
@@ -264,10 +264,10 @@ async function uninstall() {
 
   for (const l of installed) {
     rmSync(l.dir, { recursive: true, force: true });
-    process.stdout.write(`  ✓ 已删除: ${l.name}\n`);
+    process.stdout.write(`  ✓ 已刪除: ${l.name}\n`);
   }
 
-  process.stdout.write("\n  ✓ 卸载完成\n");
+  process.stdout.write("\n  ✓ 解除安裝完成\n");
 }
 
 // ---------------------------------------------------------------------------

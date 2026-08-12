@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
 /**
- * support-vision npm postinstall 脚本
+ * support-vision npm postinstall 指令碼
  *
- * npm install -g support-vision 后自动运行
- * 安装到所有已知 agent 的 skills 目录（自动创建目录）
+ * npm install -g support-vision 後自動執行
+ * 安裝到所有已知 agent 的 skills 目錄（自動建立目錄）
  */
 
 import { existsSync, mkdirSync, cpSync } from "node:fs";
@@ -52,9 +52,9 @@ function installSkill() {
 
   if (installed.length > 0) {
     process.stderr.write(
-      `\n  ✓ support-vision 已安装到 ${installed.length} 个位置:\n` +
+      `\n  ✓ support-vision 已安裝到 ${installed.length} 個位置:\n` +
       installed.map((i) => `    - ${i}`).join("\n") +
-      `\n  运行 support-vision init 来配置模型\n\n`
+      `\n  執行 support-vision init 來設定模型\n\n`
     );
   }
 }
@@ -62,5 +62,5 @@ function installSkill() {
 try {
   installSkill();
 } catch {
-  // 静默失败，不影响 npm install
+  // 靜默失敗，不影響 npm install
 }
