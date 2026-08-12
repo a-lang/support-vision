@@ -32,7 +32,7 @@ npx skills add https://github.com/a-lang/support-vision -g -y
 ### Mac / Linux one-liner
 
 ```bash
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/a-lang/support-vision/main/install.sh)"
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/a-lang/support-vision/master/install.sh)"
 ```
 
 ### Git Clone (Manual)
