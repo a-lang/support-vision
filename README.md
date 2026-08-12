@@ -11,7 +11,7 @@ When your main model can't "see" images, support-vision automatically calls a co
 - 🖼️ **Multi-image** — Analyze multiple images at once for comparison
 - 🔄 **Auto-fallback** — Primary model fails → automatically tries fallback models
 - 🌍 **19+ platforms** — OpenAI / Gemini / Qwen-VL / GLM-4V / Ollama / and more
-- 🎯 **Zero dependencies** — Node.js 18+ only, no npm install needed
+- 🎯 **Zero dependencies** — Node.js 18+ only, no install needed
 - 🛠️ **Interactive setup** — `init` command guides you through provider → API key → model selection
 - 🔌 **Cross-tool** — Works with any tool supporting the Agent Skills standard
 
@@ -29,14 +29,6 @@ When your main model can't "see" images, support-vision automatically calls a co
 npx skills add https://github.com/a-lang/support-vision -g -y
 ```
 
-### npm
-
-```bash
-npm install -g support-vision
-```
-
-Installs the global `support-vision` command and automatically copies skill files to all agent skill directories.
-
 ### Mac / Linux one-liner
 
 ```bash
@@ -52,9 +44,6 @@ git clone https://github.com/a-lang/support-vision.git ~/.agents/skills/support-
 ### Uninstall
 
 ```bash
-# npm
-npm uninstall -g support-vision
-
 # npx skills
 npx skills remove support-vision
 
@@ -65,12 +54,6 @@ node install.mjs --uninstall
 ## Quick Start
 
 After installation, configure a vision model (one-time setup):
-
-### npm users
-
-```bash
-support-vision init
-```
 
 ### git / npx skills users
 
@@ -89,14 +72,6 @@ node "$HOME\.agents\skills\support-vision\scripts\vision.mjs" init
 ```
 
 ## Usage
-
-### npm users
-
-```bash
-support-vision ./image.png
-support-vision img1.png img2.png "Compare these two images"
-support-vision https://example.com/img.png "Describe this image"
-```
 
 ### git / npx skills users
 
@@ -119,15 +94,15 @@ Attach an image and say "look at this screenshot" or "analyze this UI" — auto-
 ## Configuration
 
 ```bash
-support-vision init                    # Interactive setup
-support-vision config add              # Add a fallback model
-support-vision config edit [name]      # Edit a model
-support-vision config list             # List all models
-support-vision config primary [name]   # Set primary model
-support-vision config remove <name>    # Remove a model
-support-vision config set-key <n> <k>  # Set API key
-support-vision config set-url <n> <u>  # Set API URL
-support-vision config test [name]      # Test connectivity
+node ~/.agents/skills/support-vision/scripts/vision.mjs init                   # Interactive setup
+node ~/.agents/skills/support-vision/scripts/vision.mjs config add             # Add a fallback model
+node ~/.agents/skills/support-vision/scripts/vision.mjs config edit [name]     # Edit a model
+node ~/.agents/skills/support-vision/scripts/vision.mjs config list            # List all models
+node ~/.agents/skills/support-vision/scripts/vision.mjs config primary [name]  # Set primary model
+node ~/.agents/skills/support-vision/scripts/vision.mjs config remove <name>   # Remove a model
+node ~/.agents/skills/support-vision/scripts/vision.mjs config set-key <n> <k> # Set API key
+node ~/.agents/skills/support-vision/scripts/vision.mjs config set-url <n> <u> # Set API URL
+node ~/.agents/skills/support-vision/scripts/vision.mjs config test [name]     # Test connectivity
 ```
 
 ## Supported Platforms

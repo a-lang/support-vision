@@ -11,7 +11,7 @@
 - 🖼️ **多圖辨識**—支援同時傳入多張圖片比對分析
 - 🔄 **自動備援**—主模型失敗後依序嘗試 fallback 模型
 - 🌍 **19+ 平台**—涵蓋台灣、中國與國際主流 API（OpenAI / Gemini / 通義千問 / GLM / Ollama 等）
-- 🎯 **零相依性**—只需 Node.js 18+，不需 npm install
+- 🎯 **零相依性**—只需 Node.js 18+，不需安裝
 - 🛠️ **互動式設定**—`init` 指令引導選擇平台、填入金鑰、選擇模型
 - 🔌 **跨工具**—適用於任何支援 Agent Skills 的工具
 
@@ -29,14 +29,6 @@
 npx skills add https://github.com/a-lang/support-vision -g -y
 ```
 
-### npm
-
-```bash
-npm install -g support-vision
-```
-
-安裝後自動註冊全域指令 `support-vision`，同時自動將 skill 檔案複製到所有 agent 的 skills 目錄。
-
 ### Mac / Linux 一行指令
 
 ```bash
@@ -52,9 +44,6 @@ git clone https://github.com/a-lang/support-vision.git ~/.agents/skills/support-
 ### 解除安裝
 
 ```bash
-# npm
-npm uninstall -g support-vision
-
 # npx skills
 npx skills remove support-vision
 
@@ -65,12 +54,6 @@ node install.mjs --uninstall
 ## 初始化（設定模型）
 
 安裝後需設定一個辨識圖片的模型，只需做一次。
-
-### npm 使用者
-
-```bash
-support-vision init
-```
 
 ### git / npx skills 使用者
 
@@ -90,14 +73,6 @@ node "$HOME\.agents\skills\support-vision\scripts\vision.mjs" init
 ```
 
 ## 使用方法
-
-### npm 使用者
-
-```bash
-support-vision ./image.png
-support-vision img1.png img2.png "比對兩張圖"
-support-vision https://example.com/img.png "描述圖片"
-```
 
 ### git / npx skills 使用者
 
@@ -120,18 +95,15 @@ node "$HOME\.agents\skills\support-vision\scripts\vision.mjs" ./image.png
 ## 設定管理
 
 ```bash
-# npm 使用者直接用 support-vision 指令
-# git / npx skills 使用者改為 node ~/.agents/skills/support-vision/scripts/vision.mjs
-
-support-vision init                    # 互動式初始化
-support-vision config add              # 新增 fallback 模型
-support-vision config edit [name]      # 編輯模型
-support-vision config list             # 列出模型
-support-vision config primary [name]   # 設定主模型
-support-vision config remove <name>    # 刪除模型
-support-vision config set-key <n> <k>  # 設定金鑰
-support-vision config set-url <n> <u>  # 設定 API 位址
-support-vision config test [name]      # 測試連通性
+node ~/.agents/skills/support-vision/scripts/vision.mjs init                   # 互動式初始化
+node ~/.agents/skills/support-vision/scripts/vision.mjs config add             # 新增 fallback 模型
+node ~/.agents/skills/support-vision/scripts/vision.mjs config edit [name]     # 編輯模型
+node ~/.agents/skills/support-vision/scripts/vision.mjs config list            # 列出模型
+node ~/.agents/skills/support-vision/scripts/vision.mjs config primary [name]  # 設定主模型
+node ~/.agents/skills/support-vision/scripts/vision.mjs config remove <name>   # 刪除模型
+node ~/.agents/skills/support-vision/scripts/vision.mjs config set-key <n> <k> # 設定金鑰
+node ~/.agents/skills/support-vision/scripts/vision.mjs config set-url <n> <u> # 設定 API 位址
+node ~/.agents/skills/support-vision/scripts/vision.mjs config test [name]     # 測試連通性
 ```
 
 ## 支援的平台
@@ -166,8 +138,8 @@ support-vision/
 ├── SKILL.md                 ← skill 入口（Agent 自動讀取）
 ├── package.json
 ├── bin/
-│   ├── cli.mjs              ← npm 全域指令入口
-│   └── postinstall.mjs      ← npm 安裝後自動部署 skill 檔案
+│   ├── cli.mjs              ← CLI 入口
+│   └── postinstall.mjs      ← 安裝後自動部署 skill 檔案
 ├── install.mjs              ← 跨平台安裝指令碼
 ├── install.sh               ← Mac/Linux 一鍵安裝
 ├── config.example.json      ← 設定範本
