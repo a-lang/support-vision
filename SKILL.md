@@ -1,114 +1,121 @@
 ---
 name: support-vision
-description: "为非多模态模型（如 deepseek-v4-pro、GLM-5.1、mimo-v2.5-pro 等纯文本模型）提供图片识别能力。当主模型无法识别图片、用户发送了截图/设计稿/UI 截图需要分析、或者用户说'看看这张图'、'分析这个截图'、'这张图片有什么问题'时，自动触发此技能。也适用于用户粘贴了图片但当前模型不支持图片输入的任何场景。支持同时识别多张图片，通过配置多个识图模型实现主备回退。使用指令 /skill:support-vision 或 /vision 也可手动触发。铁律：本技能配置的模型仅用于图片内容识别，绝不参与主逻辑推理。注意：如果当前模型本身是多模态模型（如 Claude Sonnet 4、GPT-4o、Gemini 等可以直接识图的模型），不要使用此技能，直接让主模型识别即可。"
+description: "Provides image recognition for non-multimodal models (text-only models like deepseek-v4-pro, GLM-5.1, mimo-v2.5-pro). Use when the main model cannot see images, when the user attaches a screenshot, design mockup, or UI screenshot, or when the user says 看看這張圖, 分析這個截圖, 這張圖片有什麼問題, 界面, 設計稿. Also use for any scenario where the user pasted an image but the current model does not support image input. Supports recognizing multiple images at once, with primary/fallback model failover. Can be triggered manually with /skill:support-vision or /vision. Iron rule: models configured by this skill are for image content recognition ONLY and must never participate in main reasoning. If the current model is already multimodal (e.g. Claude Sonnet 4, GPT-4o, Gemini), do not use this skill — let the main model recognize the image directly."
+license: MIT
+metadata:
+  version: "1.0.1"
+  repository: https://github.com/a-lang/support-vision
 ---
-# Support Vision — 非多模态模型的图片识别桥接
 
-> **铁律：本技能配置的所有模型仅用于图片内容识别，绝不参与主逻辑推理。**
-> 这些模型不会代替主模型做任何决策、分析或编码，它们只负责"看"图片然后把看到的内容用文字描述出来。
+# Support Vision — Image Recognition Bridge for Non-Multimodal Models
 
-## 什么时候使用此技能
+## Iron Rule
 
-- **用户在对话中附带了图片**，但当前模型不支持图片理解
-- **用户提到截图/图片/界面/设计**："看看这个截图"、"界面有问题"、"这个设计稿"
-- **用户描述了一个视觉问题但说不清楚**："网页显示不对"、"布局乱了"
-- **agent 在工作中遇到图片文件**（PNG/JPG/WebP 等）
-- **通过指令** `/vision` **或** `/skill:support-vision` **手动触发**
+Models configured by this skill are used **only** to describe image contents. They must **never** participate in main reasoning, decisions, analysis, or coding. They only "look" at images and output a text description of what they see.
 
-## 首次使用 — 一键初始化
+## When to use this skill
 
-```bash
-node SKILL_DIR/scripts/vision.mjs init
-```
+Use this skill when:
 
-交互式引导，只需三步：
+- The user attached an image in the conversation, but the current model does not support image understanding
+- The user mentions screenshots/images/UI: 看看這張圖, 分析這個截圖, 這張圖片有什麼問題, 界面, 設計稿, "the layout looks wrong", "the UI is broken"
+- The user describes a visual problem vaguely: 網頁顯示不對, 佈局亂了, "the page displays incorrectly"
+- You encounter an image file (PNG/JPG/WebP/etc.) while working
+- The user explicitly triggers it with `/vision` or `/skill:support-vision`
 
-1. **选 Provider** — 从预置的主流平台列表中选择
-2. **填密钥** — 输入 API Key（或环境变量名）
-3. **选模型** — 自动从 API 拉取可用模型列表供选择（如拉取失败则显示推荐列表）
+**Do NOT use** when the current model is itself multimodal (e.g. Claude Sonnet 4, GPT-4o, Gemini). Let the main model recognize the image directly.
 
-支持的平台覆盖国内外主流：
+## Workflow
 
-
-| 分类  | 平台                                                                                             |
-| --- | ---------------------------------------------------------------------------------------------- |
-| 国际  | OpenAI、Google Gemini、Anthropic Claude、DeepSeek、Groq、Mistral、xAI (Grok)、OpenRouter、Fireworks AI |
-| 国内  | 通义千问 (Qwen VL)、智谱 GLM (GLM-4V)、Moonshot (Kimi)、阶跃星辰 (Step)、MiniMax、SiliconFlow (硅基流动)、小米 MiMo  |
-| 本地  | Ollama、LM Studio                                                                               |
-| 自定义 | 任何 OpenAI 兼容的第三方平台（自填 baseUrl）                                                                 |
-
-
-## 添加备用模型
+### 1. First-time setup — one-shot initialization
 
 ```bash
-node SKILL_DIR/scripts/vision.mjs config add
+node scripts/vision.mjs init
 ```
 
-同样的交互式引导，添加的模型作为 fallback 回退。主模型失败后自动尝试。
+Interactive guided setup with three steps:
 
-## 所有配置命令
+1. **Select provider** — pick from a curated list of major platforms
+2. **Enter API key** — input the API Key (or an environment variable name)
+3. **Select model** — automatically fetches the available model list from the API (falls back to a recommended list if fetching fails)
+
+Supported platforms:
+
+| Category | Platforms |
+| --- | --- |
+| International | OpenAI, Google Gemini, Anthropic Claude, DeepSeek, Groq, Mistral, xAI (Grok), OpenRouter, Fireworks AI |
+| China | 通義千問 (Qwen VL), 智譜 GLM (GLM-4V), Moonshot (Kimi), 階躍星辰 (Step), MiniMax, SiliconFlow (硅基流動), 小米 MiMo |
+| Local | Ollama, LM Studio |
+| Custom | Any OpenAI-compatible third-party platform (enter baseUrl yourself) |
+
+### 2. Add fallback models
 
 ```bash
-# 交互式
-node SKILL_DIR/scripts/vision.mjs init                    # 初始化主模型
-node SKILL_DIR/scripts/vision.mjs config add              # 添加 fallback
-node SKILL_DIR/scripts/vision.mjs config edit [name]      # 编辑模型
-
-# 快捷命令
-node SKILL_DIR/scripts/vision.mjs config list             # 列出所有模型
-node SKILL_DIR/scripts/vision.mjs config primary [name]   # 设置主模型
-node SKILL_DIR/scripts/vision.mjs config remove <name>    # 删除模型
-node SKILL_DIR/scripts/vision.mjs config set-key <name> <key>   # 设置密钥
-node SKILL_DIR/scripts/vision.mjs config set-url <name> <url>   # 设置 API 地址
-node SKILL_DIR/scripts/vision.mjs config test [name]      # 测试连通性
+node scripts/vision.mjs config add
 ```
 
-## 使用方法 — 识别图片
+Same interactive flow. Added models act as fallbacks: if the primary model fails, the script automatically tries the next one.
 
-### 单张
+### 3. Configuration commands
 
 ```bash
-node SKILL_DIR/scripts/vision.mjs ./screenshot.png
-node SKILL_DIR/scripts/vision.mjs ./ui.png "这个界面的布局有什么问题？"
-node SKILL_DIR/scripts/vision.mjs "https://example.com/img.png" "描述这张图片"
+# Interactive
+node scripts/vision.mjs init                    # Initialize primary model
+node scripts/vision.mjs config add              # Add fallback model
+node scripts/vision.mjs config edit [name]      # Edit a model
+
+# Quick commands
+node scripts/vision.mjs config list             # List all models
+node scripts/vision.mjs config primary [name]   # View/set the primary model
+node scripts/vision.mjs config remove <name>    # Remove a model
+node scripts/vision.mjs config set-key <name> <key>   # Set API key
+node scripts/vision.mjs config set-url <name> <url>   # Set API base URL
+node scripts/vision.mjs config test [name]      # Test connectivity
 ```
 
-### 多张
+### 4. Recognize images
+
+**Single image:**
 
 ```bash
-node SKILL_DIR/scripts/vision.mjs img1.png img2.png "对比这两张图的差异"
-node SKILL_DIR/scripts/vision.mjs ./screenshots/*.png "分析这些界面截图"
-node SKILL_DIR/scripts/vision.mjs ./local.png https://example.com/remote.jpg "描述这两张"
+node scripts/vision.mjs ./screenshot.png
+node scripts/vision.mjs ./ui.png "What layout problems does this UI have?"
+node scripts/vision.mjs "https://example.com/img.png" "Describe this image"
 ```
 
-### 查找图片
+**Multiple images:**
 
-如果用户提到图片但没给路径，先搜索：
+```bash
+node scripts/vision.mjs img1.png img2.png "Compare the differences between these two images"
+node scripts/vision.mjs ./screenshots/*.png "Analyze these UI screenshots"
+node scripts/vision.mjs ./local.png https://example.com/remote.jpg "Describe both images"
+```
+
+### 5. Find the image first
+
+If the user mentions an image but did not provide a path, search for it:
 
 ```bash
 find . -name "*.png" -o -name "*.jpg" -o -name "*.webp" | head -20
 ls -lt *.png *.jpg *.webp 2>/dev/null
 ```
 
-## 获取结果后的工作流
+## Using the recognition result
 
-脚本成功后 stdout 输出的纯文本就是识别结果（stderr 是日志不影响）。
+On success, the script writes the recognition result as **plain text on stdout** (stderr contains only logs and can be ignored).
 
-1. **读取识别结果**：stdout 内容即为图片描述
-2. **结合用户问题**：把描述和用户需求结合
-3. **主模型继续工作**：用识别结果作为上下文，主模型完成后续任务
+1. **Read the result**: stdout content is the image description
+2. **Combine with the user's question**: merge the description with the user's intent
+3. **Main model continues**: use the result as context to complete the remaining task
 
-## 回退机制
+## Fallback mechanism
 
-`config list` 中排第一位的 ★ 主模型优先调用。失败后自动依次尝试后续模型。所有模型都失败则非零退出码退出。
+The model marked ★ (first in `config list`) is the primary and is tried first. On failure, subsequent models are tried in order automatically. If all models fail, the script exits with a non-zero exit code.
 
-## 环境变量
+## Environment variables
 
-
-| 变量                     | 说明                 |
-| ---------------------- | ------------------ |
-| `VISION_CONFIG_PATH`   | 自定义配置文件路径          |
-| `VISION_DEFAULT_MODEL` | 临时覆盖主模型（按 name 匹配） |
-| `VISION_API_KEY`       | 全局密钥回退             |
-
-
+| Variable | Purpose |
+| --- | --- |
+| `VISION_CONFIG_PATH` | Custom config file path |
+| `VISION_DEFAULT_MODEL` | Temporarily override the primary model (matched by name) |
+| `VISION_API_KEY` | Global API key fallback |
